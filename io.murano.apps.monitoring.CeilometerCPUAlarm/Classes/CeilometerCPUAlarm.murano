@@ -31,7 +31,7 @@ Workflow:
         Contract: $.string().notNull()
     Body:
      - $instanceName: $instance.name
-     - $.environment.reporter.report($this, '[VMCluster]Registering Ceilometer Alarm for instance{0}'.format($instanceName))
+     - $.environment.reporter.report($this, '[VMCluster]Registering Ceilometer Alarm for instance {0}'.format($instanceName))
      - $res: new(sys:Resources)
      - $alarmAction: format('{0}/actions/{1}/actions/{2}_{3}',
            config(murano,actions_url),

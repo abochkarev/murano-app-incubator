@@ -39,3 +39,5 @@ Workflow:
   enableLb:
     Body:
        - $.environment.reporter.report($this,'Empty body of TomcatServletContainer')
+  restartService:
+      Body:

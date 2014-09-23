@@ -90,7 +90,7 @@ Methods:
         Default: 8080
       url:
         Contract: $.string()
-        Default: '\/'
+        Default: '/'
     Body:
         - $.environment.reporter.report($this, '[Nagios] Add service to monitoring')
         - $alarmAction: format('{0}/actions/{1}/actions/{2}_{3}',
