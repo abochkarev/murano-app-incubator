@@ -1,0 +1,110 @@
+Namespaces:
+  =: io.murano.apps.docker.Kubernetes
+  docker: io.murano.apps.docker
+  std: io.murano
+  res: io.murano.resources
+  sys: io.murano.system
+
+# TODO: 1. we need to check status of POD by using /opt/bin/kubectl get -o json pod
+# It will provide a json with pod state, and host which we need to expose to end user.
+#
+# TODO: 2. Figure out how to bind ports here. We can use approach we used in DockerVM but in POds not all ports
+# should be xposed
+#
+# TODO: 3. Porpagate environment variables via container.env: {}
+#
+
+Name: POD
+
+Extends: docker:DockerServer
+
+Properties:
+
+  name:
+    Contract: $.string().notNull()
+  labels:
+    Contract: [$.string()]
+
+  kubernetes:
+    Contract: $.class('io.murano.apps.docker.Kubernetes').notNull()
+
+  newPOD:
+    Contract: $.bool()
+    Default: true
+    Usage: Out
+
+  podDefinition:
+   Contract: {}
+   Usage: Out
+
+  public_ip:
+    Contract: $.string()
+    Usage: Out
+
+
+Workflow:
+  initialize:
+    Body:
+      - $.environment: $.find(std:Environment).require()
+
+  deploy:
+    Body:
+      - If: not $.getAttr(deployed, false)
+        Then:
+          - $.environment.reporter.report($this, 'Initial POD configuration')
+          - $.kubernetes.deploy()
+          - $resources: new(sys:Resources)
+          - $.podDefinition: $resources.yaml('pod.yaml').bind(dict(
+             id => $.name,
+             name => $.name
+             ))
+          - $.podDefinition.desiredState.manifest.containers: []
+          - $public_ip: 'none'
+          - $.setAttr(deployed, true)
+
+
+  addApplication:
+    Arguments:
+      docker_image:
+        Contract: $.string().notNull()
+      docker_env:
+        Contract: [$.string()]
+      app_ports:
+        Contract: [$.int()]
+      app_volume:
+        Contract: {}
+    Body:
+       - $.environment.reporter.report($this, 'Adding a container to a POD')
+       - $resources: new(sys:Resources)
+       - $container:
+           name: $.name
+           image: $docker_image
+           cpu: 1000
+
+       - $container.ports: []
+       - For: port
+         In: $app_ports
+         Do:
+           - $portDef:
+               name: str($port)
+               containerPort: $port
+           - $container.ports: $container.ports + list($portDef)
+
+       - $.podDefinition.desiredState.manifest.containers: $.podDefinition.desiredState.manifest.containers + list($container)
+       - $.environment.reporter.report($this, 'Update POD')
+       - $template: $resources.yaml('UpdatePOD.template').bind(dict(
+           podDefinition => $.podDefinition,
+           newPOD => $.newPOD,
+           debug => true
+           ))
+
+       - $.kubernetes.kubeMaster.agent.call($template, $resources)
+       - $.environment.reporter.report($this, 'Container has been added.')
+       - Return: {}
+
+       - If: $.newPOD
+         Then:
+           $.newPOD: false
+
+
+

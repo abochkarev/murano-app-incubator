@@ -1,0 +1,32 @@
+Version: 2
+
+Application:
+  ?:
+    type: io.murano.apps.docker.Kubernetes.POD
+  name: $.appConfiguration.name
+  labels: $.appConfiguration.labels
+  kubernetes: $.appConfiguration.kubernetes
+
+
+Forms:
+  - appConfiguration:
+      fields:
+        - name: name
+          type: string
+          label: Application Name
+          required: true
+          description: >-
+            This name is used as Kubernetes ID and name label
+        - name: labels
+          type: string
+          label: Labels
+          required: false
+          description: >-
+            Comma separated list of labels
+        - name: kubernetes
+          type: io.murano.apps.docker.Kubernetes
+          label: Kubernetes cluster
+          required: true
+          description: >-
+            Kubernetes service
+
