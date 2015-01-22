@@ -1,0 +1,141 @@
+Namespaces:
+  =: io.murano.apps.docker
+  std: io.murano
+  res: io.murano.resources
+  sys: io.murano.system
+
+
+Name: Kubernetes
+
+Extends: std:Application
+
+Properties:
+  name:
+    Contract: $.string().notNull()
+
+  instances:
+    Contract:
+      - $.class(res:Instance).notNull()
+
+  maxCount:
+    Contract: $.int().notNull()
+
+  initialCount:
+    Contract: $.int().notNull()
+
+  currentCount:
+    Contract: $.int()
+    Usage: InOut
+
+  portalNet:
+    Contract: $.string().notNull()
+    Default: '11.1.1.1\/24'
+
+  kubeMaster:
+    Contract: $.class(res:Instance)
+    Usage: Out
+
+Workflow:
+  initialize:
+    Body:
+      - $.environment: $.find(std:Environment).require()
+
+  deploy:
+    Body:
+      - If: not $.getAttr(deployed, false)
+        Then:
+          - $.environment.reporter.report($this, 'Creating VMs for Kubernetes cluster')
+          - $securityGroupIngress:
+              - ToPort: 4001
+                FromPort: 4001
+                IpProtocol: tcp
+                External: False
+              - ToPort: 7001
+                FromPort: 7001
+                IpProtocol: tcp
+                External: False
+              - ToPort: 10250
+                FromPort: 10250
+                IpProtocol: tcp
+                External: False
+              - ToPort: 8080
+                FromPort: 8080
+                IpProtocol: tcp
+                External: False
+          - $.environment.securityGroupManager.addGroupIngress($securityGroupIngress)
+          #Deploy VMS
+          - $.currentCount: $.initialCount
+          - $.instances.pselect($.deploy())
+          - $.kubeMaster: $.instances[0]
+          #Configure ETCD master
+          - $resources: new(sys:Resources)
+          - $.environment.reporter.report($this, 'Configuring ETCD first cluster node')
+          - $template: $resources.yaml('MasterEtcdSetup.template').bind(dict(
+             name => $.kubeMaster.name,
+             ip => $.kubeMaster.ipAddresses[0]
+             ))
+          - $.kubeMaster.agent.call($template, $resources)
+          - $first: true
+          - For: inst
+            In: $.instances
+            Do:
+              - If: not $first
+                Then:
+                  - $.environment.reporter.report($this, 'Configuring ETCD node {0}'.format($inst.name))
+                  - $template: $resources.yaml('EtcdAddMember.template').bind(dict(
+                                 name => $inst.name,
+                                 ip => $inst.ipAddresses[0]
+                                 ))
+                  - $cluster_config: $.kubeMaster.agent.call($template, $resources)
+
+                  - $template: $resources.yaml('MemberEtcdSetup.template').bind(dict(
+                                 name => $inst.name,
+                                 ip => $inst.ipAddresses[0],
+                                 cluster_config => $cluster_config
+                                 ))
+                  - $inst.agent.call($template, $resources)
+                Else:
+                  - $first: false
+
+          - $.environment.reporter.report($this, 'ETCD is installed.')
+          - $.configureKubeMaster()
+          # Install all minions in parallel
+          #TODO do proper installation on master node
+          - $.instances.pselect($this.configureKubeMinion($))
+          - $ep: format('http://{0}:8080', $.kubeMaster.floatingIpAddress)
+          - $.environment.reporter.report($this, 'Kubernetes API endpoint is {0}'.format($ep))
+          - $.setAttr(deployed, true)
+
+
+
+  configureKubeMaster:
+    Body:
+      - $.environment.reporter.report($this, 'Setup Kubernetes API host')
+      - $resources: new(sys:Resources)
+      - $template: $resources.yaml('KubeMasterSetup.template').bind(dict(
+                   name => $.kubeMaster.name,
+                   ip => $.kubeMaster.ipAddresses[0],
+                   portalNet => $.portalNet
+                   ))
+      - $.kubeMaster.agent.call($template, $resources)
+
+  configureKubeMinion:
+    Arguments:
+      instance:
+        Contract: $.class(res:Instance).notNull()
+    Body:
+      - $.environment.reporter.report($this, 'Setup Kubernetes Minion on {0}'.format($instance.name))
+      - $resources: new(sys:Resources)
+      - $template: $resources.yaml('KubeMinionSetup.template').bind(dict(
+                   name => $instance.name,
+                   ip => $instance.ipAddresses[0],
+                   masterIP => $.kubeMaster.ipAddresses[0]
+                   ))
+      - $instance.agent.call($template, $resources)
+
+      - $template: $resources.yaml('KubeRegisterNode.template').bind(dict(
+                           name => $instance.name,
+                           ip => $instance.ipAddresses[0]
+                           ))
+      - $.kubeMaster.agent.call($template, $resources)
+
