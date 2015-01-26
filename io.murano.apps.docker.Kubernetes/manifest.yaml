@@ -3,10 +3,8 @@ Type: Application
 FullName: io.murano.apps.docker.Kubernetes
 Name: Kubernetes
 Description: |
- PostgreSQL is a powerful, open source object-relational database system.
- It has more than 15 years of active development and a proven architecture
- that has earned it a strong reputation for reliability, data integrity,
- and correctness.
+ Kubernetes is an open source system for managing containerized applications across multiple hosts,
+ providing basic mechanisms for deployment, maintenance, and scaling of applications.
 Author: 'Mirantis, Inc'
 Tags: [Database, Docker, Kubernetes]
 Classes:
