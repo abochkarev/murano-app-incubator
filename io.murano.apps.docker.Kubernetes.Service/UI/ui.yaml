@@ -1,0 +1,46 @@
+Version: 2
+
+Application:
+  ?:
+    type: io.murano.apps.docker.Kubernetes.Service
+  name: $.appConfiguration.name
+  kubernetesPOD: $.appConfiguration.kubernetesPOD
+  port:  $.appConfiguration.port
+  containerPort: $.appConfiguration.containerPort
+  externalLB: $.appConfiguration.externalLB
+
+
+Forms:
+  - appConfiguration:
+      fields:
+        - name: name
+          type: string
+          label: Application Name
+          required: true
+          description: >-
+            This name is used as Kubernetes ID and name label
+        - name: port
+          type: integer
+          label: Service Port
+          required: true
+          description: >-
+            Port for a service
+        - name: containerPort
+          type: integer
+          label: Container Port
+          required: true
+          description: >-
+            Port exposed by a container
+        - name: kubernetesPOD
+          type: io.murano.apps.docker.Kubernetes.POD
+          label: Kubernetes POD
+          required: true
+          description: >-
+            Kubernetes POD linked to a service
+        - name: externalLB
+          type: boolean
+          label: Enable External LB
+          initial: false
+          required: false
+          widgetMedia:
+             css: {all: ['muranodashboard/css/checkbox.css']}

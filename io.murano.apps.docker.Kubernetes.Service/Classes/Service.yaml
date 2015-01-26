@@ -1,0 +1,77 @@
+Namespaces:
+  =: io.murano.apps.docker.Kubernetes
+  docker: io.murano.apps.docker
+  std: io.murano
+  res: io.murano.resources
+  sys: io.murano.system
+
+# TODO: 1. we need to check status of POD by using /opt/bin/kubectl get -o json pod
+# It will provide a json with pod state, and host which we need to expose to end user.
+#
+# TODO: 2. Figure out how to bind ports here. We can use approach we used in DockerVM but in POds not all ports
+# should be xposed
+#
+# TODO: 3. Porpagate environment variables via container.env: {}
+#
+
+Name: Service
+Extends: std:Application
+
+Properties:
+
+  name:
+    Contract: $.string().notNull()
+
+  kubernetesPOD:
+    Contract: $.class('io.murano.apps.docker.Kubernetes.POD').notNull()
+
+  port:
+    Contract: $.int().notNull()
+
+  containerPort:
+    Contract: $.int().notNull()
+
+  externalLB:
+    Contract: $.bool().notNull()
+
+  serviceDefinition:
+    Contract: {}
+    Usage: Out
+
+  newPOD:
+    Contract: $.bool()
+    Usage: Out
+    Default: true
+
+
+Workflow:
+  initialize:
+    Body:
+      - $.environment: $.find(std:Environment).require()
+
+  deploy:
+    Body:
+      - If: not $.getAttr(deployed, false)
+        Then:
+          - $.environment.reporter.report($this, 'Waiting for a POD availability')
+          - $.kubernetesPOD.deploy()
+          - $resources: new(sys:Resources)
+          - $.serviceDefinition: $resources.yaml('service.yaml').bind(dict(
+             id => $.name,
+             port => $.port,
+             container_port => $.containerPort,
+             selector_name => $.kubernetesPOD.name,
+             ext_balancer => $.externalLB
+             ))
+          - $template: $resources.yaml('UpdatePOD.template').bind(dict(
+                     podDefinition => $.serviceDefinition,
+                     newPOD => $.newPOD,
+                     debug => true
+                     ))
+          - $.kubernetesPOD.kubernetes.kubeMaster.agent.call($template, $resources)
+          - $.environment.reporter.report($this, 'Kubernetes Service has been configured')
+          - $.setAttr(deployed, true)
+
+
+
+
