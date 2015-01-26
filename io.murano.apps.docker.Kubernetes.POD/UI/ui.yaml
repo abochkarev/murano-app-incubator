@@ -6,6 +6,8 @@ Application:
   name: $.appConfiguration.name
   labels: $.appConfiguration.labels
   kubernetes: $.appConfiguration.kubernetes
+  replication: $.appConfiguration.replicate
+  replicationFactor: $.appConfiguration.replication_factor
 
 
 Forms:
@@ -29,4 +31,16 @@ Forms:
           required: true
           description: >-
             Kubernetes service
+        - name: replicate
+          type: boolean
+          label: Replicate
+          initial: false
+          required: false
+          widgetMedia:
+             css: {all: ['muranodashboard/css/checkbox.css']}
+        - name: replication_factor
+          type: integer
+          label: Replication Factor
+          initial: 2
+          required: false
 

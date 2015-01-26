@@ -41,6 +41,12 @@ Properties:
     Contract: $.string()
     Usage: Out
 
+  replication:
+    Contract: $.bool().notNull()
+
+  replicationFactor:
+    Contract: $.int()
+
 
 Workflow:
   initialize:
@@ -54,16 +60,26 @@ Workflow:
           - $.environment.reporter.report($this, 'Initial POD configuration')
           - $.kubernetes.deploy()
           - $resources: new(sys:Resources)
-          - $.podDefinition: $resources.yaml('pod.yaml').bind(dict(
-             id => $.name,
-             name => $.name
-             ))
-          - $.podDefinition.desiredState.manifest.containers: []
+          - If: $.replication
+            Then:
+                  - $.podDefinition: $resources.yaml('replication_group.yaml').bind(dict(
+                     id => $.name,
+                     name => $.name,
+                     replicas => $.replicationFactor,
+                     replica_selector => $.name
+                     ))
+                  - $.podDefinition.desiredState.podTemplate.desiredState.manifest.containers: []
+            Else:
+                  - $.podDefinition: $resources.yaml('pod.yaml').bind(dict(
+                                   id => $.name,
+                                   name => $.name
+                                   ))
+                  - $.podDefinition.desiredState.manifest.containers: []
           - $public_ip: 'none'
           - $.setAttr(deployed, true)
 
 
-  addApplication:
+  addApplicationPOD:
     Arguments:
       docker_image:
         Contract: $.string().notNull()
@@ -106,5 +122,69 @@ Workflow:
          Then:
            $.newPOD: false
 
+  addApplicationReplication:
+       Arguments:
+         docker_image:
+           Contract: $.string().notNull()
+         docker_env:
+           Contract: [$.string()]
+         app_ports:
+           Contract: [$.int()]
+         app_volume:
+           Contract: {}
+       Body:
+          - $.environment.reporter.report($this, 'Adding a container to a Replication Group')
+          - $resources: new(sys:Resources)
+          - $container:
+              name: $.name
+              image: $docker_image
+              cpu: 1000
+
+          - $container.ports: []
+          - For: port
+            In: $app_ports
+            Do:
+              - $portDef:
+                  name: str($port)
+                  containerPort: $port
+              - $container.ports: $container.ports + list($portDef)
+
+          - $.podDefinition.desiredState.podTemplate.desiredState.manifest.containers: $.podDefinition.desiredState.podTemplate.desiredState.manifest.containers + list($container)
+          - $.environment.reporter.report($this, 'Update POD')
+          - $template: $resources.yaml('UpdatePOD.template').bind(dict(
+              podDefinition => $.podDefinition,
+              newPOD => $.newPOD,
+              debug => true
+              ))
+
+          - $.kubernetes.kubeMaster.agent.call($template, $resources)
+          - $.environment.reporter.report($this, 'Container has been added.')
+          - Return: {}
+
+          - If: $.newPOD
+            Then:
+              $.newPOD: false
 
 
+  addApplication:
+       Arguments:
+         docker_image:
+           Contract: $.string().notNull()
+         docker_env:
+           Contract: [$.string()]
+         app_ports:
+           Contract: [$.int()]
+         app_volume:
+           Contract: {}
+       Body:
+         - If: $.replication
+           Then:
+             - $.addApplicationReplication( docker_image => $docker_image,
+                 docker_env => $docker_env,
+                 app_ports => $app_ports,
+                 app_volume => $app_volume)
+           Else:
+             - $.addApplicationPOD( docker_image => $docker_image,
+                                docker_env => $docker_env,
+                                app_ports => $app_ports,
+                                app_volume => $app_volume)
