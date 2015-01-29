@@ -1,0 +1,73 @@
+Version: 2
+Templates:
+  service:
+     ?:
+       type: io.murano.apps.docker.Kubernetes.Service
+     name: 'guestbook'
+     kubernetesPOD: $.appConfiguration.docker
+     port:  3000
+     containerPort: 3000
+     externalLB: false
+     selector:
+       name: 'guestbook'
+
+  empty:
+    ?:
+      type: io.murano
+    name: $.redis_config.master
+
+  pod:
+    ?:
+      type: io.murano.apps.docker.Kubernetes.POD
+    name: 'guestbook'
+    labels: {}
+    kubernetes: $.appConfiguration.kubernetes
+    replication: true
+    replicationFactor: $.appConfiguration.replication_factor
+
+Application:
+  ?:
+    type: io.murano.apps.docker.Kubernetes.GuestBook
+  name: 'guestbook'
+
+  docker: $pod
+  service: $service
+  image: 'kubernetes/guestbook'
+  port: 3000
+
+
+Forms:
+  - appConfiguration:
+      fields:
+        - name: name
+          type: string
+          label: Application Name
+          initial: 'guestbook'
+          description: >-
+            Enter a desired name for the application. Just A-Z, a-z, 0-9, dash and
+            underline are allowed
+        - name: replication_factor
+          type: integer
+          label: Replication Factor
+          initial: 2
+          required: true
+        - name: kubernetes
+          type: io.murano.apps.docker.Kubernetes
+          label: Kubernetes cluster
+          required: true
+          description: >-
+            Kubernetes service
+  - redis_config:
+      fields:
+        - name: master
+          type: io.murano.apps.docker.Kubernetes.RedisMaster
+          label: Redis Master Service
+          description: >-
+            Select an instance of Redis Master
+        - name: slave
+          type: io.murano.apps.docker.Kubernetes.RedisSlave
+          label: Redis Slave Service
+          description: >-
+            Select an instance of Redis Slaves
+
+

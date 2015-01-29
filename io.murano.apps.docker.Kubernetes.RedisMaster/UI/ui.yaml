@@ -1,0 +1,52 @@
+Version: 2
+Templates:
+  service:
+     ?:
+       type: io.murano.apps.docker.Kubernetes.Service
+     name: 'redis-master'
+     kubernetesPOD: $.appConfiguration.docker
+     kubernetes: $.appConfiguration.kubernetes
+     port:  6579
+     containerPort: 6379
+     externalLB: false
+     selector:
+       service: 'redis'
+       role: 'master'
+
+  pod:
+    ?:
+      type: io.murano.apps.docker.Kubernetes.POD
+    name: 'redis-master'
+    labels: {}
+    kubernetes: $.appConfiguration.kubernetes
+    replication: false
+    replicationFactor: 0
+
+Application:
+  ?:
+    type: io.murano.apps.docker.Kubernetes.RedisMaster
+  name: 'redis-master'
+
+  docker: $pod
+  service: $service
+  image: 'gurpartap/redis'
+  port: 6379
+
+
+Forms:
+  - appConfiguration:
+      fields:
+        - name: name
+          type: string
+          label: Application Name
+          initial: 'redis-master'
+          description: >-
+            Enter a desired name for the application. Just A-Z, a-z, 0-9, dash and
+            underline are allowed
+        - name: kubernetes
+          type: io.murano.apps.docker.Kubernetes
+          label: Kubernetes cluster
+          required: true
+          description: >-
+            Kubernetes service
+

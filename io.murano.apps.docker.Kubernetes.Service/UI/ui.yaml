@@ -5,6 +5,7 @@ Application:
     type: io.murano.apps.docker.Kubernetes.Service
   name: $.appConfiguration.name
   kubernetesPOD: $.appConfiguration.kubernetesPOD
+  kubernetes: $.appConfiguration.kubernetes
   port:  $.appConfiguration.port
   containerPort: $.appConfiguration.containerPort
   externalLB: $.appConfiguration.externalLB
@@ -33,6 +34,12 @@ Forms:
             Port exposed by a container
         - name: kubernetesPOD
           type: io.murano.apps.docker.Kubernetes.POD
+          label: Kubernetes POD
+          required: false
+          description: >-
+            Kubernetes POD linked to a service
+        - name: kubernetes
+          type: io.murano.apps.docker.Kubernetes
           label: Kubernetes POD
           required: true
           description: >-

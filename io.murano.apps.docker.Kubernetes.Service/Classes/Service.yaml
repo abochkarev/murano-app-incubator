@@ -23,7 +23,10 @@ Properties:
     Contract: $.string().notNull()
 
   kubernetesPOD:
-    Contract: $.class('io.murano.apps.docker.Kubernetes.POD').notNull()
+    Contract: $.class('io.murano.apps.docker.Kubernetes.POD')
+
+  kubernetes:
+    Contract: $.class('io.murano.apps.docker.Kubernetes').notNull()
 
   port:
     Contract: $.int().notNull()
@@ -33,6 +36,9 @@ Properties:
 
   externalLB:
     Contract: $.bool().notNull()
+
+  selector:
+    Contract: {}
 
   serviceDefinition:
     Contract: {}
@@ -54,7 +60,6 @@ Workflow:
       - If: not $.getAttr(deployed, false)
         Then:
           - $.environment.reporter.report($this, 'Waiting for a POD availability')
-          - $.kubernetesPOD.deploy()
           - $resources: new(sys:Resources)
           - $.serviceDefinition: $resources.yaml('service.yaml').bind(dict(
              id => $.name,
@@ -63,12 +68,13 @@ Workflow:
              selector_name => $.kubernetesPOD.name,
              ext_balancer => $.externalLB
              ))
+          - $.serviceDefinition.selector: $.serviceDefinition.selector + $.selector
           - $template: $resources.yaml('UpdatePOD.template').bind(dict(
                      podDefinition => $.serviceDefinition,
                      newPOD => $.newPOD,
                      debug => true
                      ))
-          - $.kubernetesPOD.kubernetes.kubeMaster.agent.call($template, $resources)
+          - $.kubernetes.kubeMaster.agent.call($template, $resources)
           - $.environment.reporter.report($this, 'Kubernetes Service has been configured')
           - $.setAttr(deployed, true)
 

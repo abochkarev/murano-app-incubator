@@ -1,0 +1,58 @@
+Namespaces:
+  =: io.murano.apps.docker.Kubernetes
+  std: io.murano
+  sys: io.murano.system
+  apps: io.murano.apps
+  tc: io.murano.apps.apache
+
+Name: RedisMaster
+
+Extends: std:Application
+
+Properties:
+  name:
+    Contract: $.string().notNull()
+  docker:
+    Contract: $.class('io.murano.apps.docker.DockerService').notNull()
+  image:
+    Contract: $.string().notNull()
+  port:
+    Contract: $.int()
+  bindings:
+    Contract: {}
+    Usage: Out
+  service:
+    Contract: $.class('io.murano.apps.docker.Kubernetes.Service').notNull()
+
+Workflow:
+  initialize:
+    Body:
+      - $.environment: $.find(std:Environment).require()
+
+  deploy:
+    Body:
+      - $.environment: $.find(std:Environment).require()
+      - If: not $.getAttr(deployed, false)
+        Then:
+          - $.environment.reporter.report($this, 'Checking for Docker Service availability')
+          - $.docker.deploy()
+          - $.environment.reporter.report($this, 'Installing Application')
+          - $ports:
+            - $.port
+          - $env:
+            - format('APPLICATION={0}', $.name)
+          - $volumes: {}
+          - $labels:
+              service: 'redis'
+              role: 'master'
+          - $.bindings: $.docker.addApplication(
+              docker_image => $.image,
+              docker_env => $env,
+              app_ports => $ports,
+              app_volume => $volumes,
+              app_labels => $labels
+              )
+          - $.environment.reporter.report($this, 'Configuring Kubernetes Service for Redis Master')
+          - $.service.deploy()
+          - $.environment.reporter.report($this, 'Redis Master is ready')
+          - $.setAttr(deployed, true)

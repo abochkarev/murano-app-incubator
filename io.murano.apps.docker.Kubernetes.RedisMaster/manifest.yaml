@@ -1,0 +1,9 @@
+Format: 1.0
+Type: Application
+FullName: io.murano.apps.docker.Kubernetes.RedisMaster
+Name: Redis Master Service
+Description: | 
+ This application created Redis Master service in Kubernetes environment.
+Tags: [docker, application, redis]
+Classes:
+ io.murano.apps.docker.Kubernetes.RedisMaster: RedisMaster.murano

@@ -1,5 +1,16 @@
 Version: 2
-
+Templates:
+  service:
+     ?:
+       type: io.murano.apps.docker.Kubernetes.Service
+     name: format('{0}-service',$.appConfiguration.name)
+     kubernetes: $.appConfiguration.kubernetes
+     port:  $.service_config.port
+     containerPort: $.service_config.containerPort
+     externalLB: $.service_config.externalLB
+     selector:
+       service: 'redis'
+       role: 'slave'
 Application:
   ?:
     type: io.murano.apps.docker.Kubernetes.POD
@@ -8,6 +19,7 @@ Application:
   kubernetes: $.appConfiguration.kubernetes
   replication: $.appConfiguration.replicate
   replicationFactor: $.appConfiguration.replication_factor
+  service: $service
 
 
 Forms:
@@ -43,4 +55,31 @@ Forms:
           label: Replication Factor
           initial: 2
           required: false
+  - service_config:
+      fields:
+        - name: enable_service
+          type: boolean
+          label: Enable Service for the POD
+          required: true
+          description: >-
+            Register this POD as a Kubernetes service
+        - name: port
+          type: integer
+          label: Service Port
+          required: true
+          description: >-
+            Port for a service
+        - name: containerPort
+          type: integer
+          label: Container Port
+          required: true
+          description: >-
+            Port exposed by a container
+        - name: externalLB
+          type: boolean
+          label: Enable External LB
+          initial: false
+          required: false
+          widgetMedia:
+             css: {all: ['muranodashboard/css/checkbox.css']}
 

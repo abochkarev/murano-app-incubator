@@ -1,0 +1,62 @@
+Version: 2
+Templates:
+  service:
+     ?:
+       type: io.murano.apps.docker.Kubernetes.Service
+     name: 'redis-slave'
+     kubernetesPOD: $.appConfiguration.docker
+     port:  6579
+     containerPort: 6379
+     kubernetes: $.appConfiguration.kubernetes
+     externalLB: false
+     selector:
+       service: 'redis'
+       role: 'slave'
+  pod:
+    ?:
+      type: io.murano.apps.docker.Kubernetes.POD
+    name: 'redis-slave'
+    labels: {}
+    kubernetes: $.appConfiguration.kubernetes
+    replication: true
+    replicationFactor: $.appConfiguration.replication_factor
+
+Application:
+  ?:
+    type: io.murano.apps.docker.Kubernetes.RedisSlave
+  name: 'redis-slave'
+
+  docker: $pod
+  service: $service
+  image: 'gurpartap/redis'
+  port: 6379
+
+
+Forms:
+  - appConfiguration:
+      fields:
+        - name: name
+          type: string
+          label: Application Name
+          initial: 'redis-slave'
+          description: >-
+            Enter a desired name for the application. Just A-Z, a-z, 0-9, dash and
+            underline are allowed
+        - name: master
+          type: io.murano.apps.docker.Kubernetes.RedisMaster
+          label: Redis Master Service
+          description: >-
+            Select an instance of Redis Master
+        - name: replication_factor
+          type: integer
+          label: Replication Factor
+          initial: 2
+          required: true
+
+        - name: kubernetes
+          type: io.murano.apps.docker.Kubernetes
+          label: Kubernetes cluster
+          required: true
+          description: >-
+            Kubernetes service
+

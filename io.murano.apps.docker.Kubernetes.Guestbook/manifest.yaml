@@ -1,0 +1,9 @@
+Format: 1.0
+Type: Application
+FullName: io.murano.apps.docker.Kubernetes.GuestBook
+Name: GuestBook Example
+Description: | 
+ This is an example application for Kubernetes.
+Tags: [docker, application, kubernetes, guestbook]
+Classes:
+ io.murano.apps.docker.Kubernetes.GuestBook: GuestBook.murano

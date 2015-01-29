@@ -1,0 +1,9 @@
+Format: 1.0
+Type: Application
+FullName: io.murano.apps.docker.Kubernetes.RedisSlave
+Name: Redis Slaves Service
+Description: | 
+ This application created Redis Slaves service in Kubernetes environment.
+Tags: [docker, application, redis]
+Classes:
+ io.murano.apps.docker.Kubernetes.RedisSlave: RedisSlave.murano

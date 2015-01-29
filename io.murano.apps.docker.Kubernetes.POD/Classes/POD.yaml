@@ -28,6 +28,9 @@ Properties:
   kubernetes:
     Contract: $.class('io.murano.apps.docker.Kubernetes').notNull()
 
+  service:
+    Contract: $.class('io.murano.apps.docker.Kubernetes.Service')
+
   newPOD:
     Contract: $.bool()
     Default: true
@@ -89,9 +92,14 @@ Workflow:
         Contract: [$.int()]
       app_volume:
         Contract: {}
+      app_labels:
+        Contract: {}
+        Default: {}
     Body:
        - $.environment.reporter.report($this, 'Adding a container to a POD')
        - $resources: new(sys:Resources)
+       #TODO implement this
+       - $.podDefinition.labels: $.podDefinition + $app_labels
        - $container:
            name: $.name
            image: $docker_image
@@ -132,6 +140,9 @@ Workflow:
            Contract: [$.int()]
          app_volume:
            Contract: {}
+         app_labels:
+           Contract: {}
+           Default: {}
        Body:
           - $.environment.reporter.report($this, 'Adding a container to a Replication Group')
           - $resources: new(sys:Resources)
@@ -176,6 +187,9 @@ Workflow:
            Contract: [$.int()]
          app_volume:
            Contract: {}
+         app_labels:
+           Contract: {}
+           Default: {}
        Body:
          - If: $.replication
            Then:
