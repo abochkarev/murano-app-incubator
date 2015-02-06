@@ -1,29 +1,35 @@
 Version: 2
 Templates:
+#  loadbalancer:
+#     ?:
+#       type: io.murano.traffic.NeutronLoadBalancer
+#     name: 'guestbook-lb'
+#     balancingMethod: ROUND_ROBIN
+#     port: 3000
+
   service:
      ?:
        type: io.murano.apps.docker.Kubernetes.Service
      name: 'guestbook'
-     kubernetesPOD: $.appConfiguration.docker
+     kubernetes: $.appConfiguration.kubernetes
      port:  3000
      containerPort: 3000
+#     loadBalancer: $loadbalancer
      externalLB: false
+     enabled: true
      selector:
        name: 'guestbook'
-
-  empty:
-    ?:
-      type: io.murano
-    name: $.redis_config.master
 
   pod:
     ?:
       type: io.murano.apps.docker.Kubernetes.POD
     name: 'guestbook'
-    labels: {}
+    labels:
+      name: 'guestbook'
     kubernetes: $.appConfiguration.kubernetes
     replication: true
     replicationFactor: $.appConfiguration.replication_factor
+    exposePort: true
 
 Application:
   ?:
@@ -34,6 +40,8 @@ Application:
   service: $service
   image: 'kubernetes/guestbook'
   port: 3000
+  redisMaster: $.redis_config.master
+  redisSlave: $.redis_config.slave
 
 
 Forms:
@@ -48,26 +56,31 @@ Forms:
             underline are allowed
         - name: replication_factor
           type: integer
-          label: Replication Factor
+          label: Number of front end servers
           initial: 2
           required: true
+          description: >-
+            GuestBook appication deploys frontend serice which might consist of several PODs (FrontEnd servers)
         - name: kubernetes
           type: io.murano.apps.docker.Kubernetes
           label: Kubernetes cluster
           required: true
           description: >-
-            Kubernetes service
+            GuestBook application is a Kubernetes application which requires Kubernetes infrastructure.
+            Kubernetes cluster is required for this application to be app and running.
   - redis_config:
       fields:
         - name: master
           type: io.murano.apps.docker.Kubernetes.RedisMaster
           label: Redis Master Service
           description: >-
-            Select an instance of Redis Master
+            GuestBook application uses Redis backend service. Redis backend is a master-slave configuration.
+            Please select Redis Master component which will be used by the application for Read\Write operations.
         - name: slave
           type: io.murano.apps.docker.Kubernetes.RedisSlave
           label: Redis Slave Service
           description: >-
-            Select an instance of Redis Slaves
+            GuestBook application uses Redis backend service. Redis backend is a master-slave configuration.
+            Please select Redis Slave component which will be used by the application for Read operations.
 
 

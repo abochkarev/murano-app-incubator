@@ -3,6 +3,5 @@ kind: Service
 apiVersion: v1beta1
 port: $port
 containerPort: $container_port
-selector:
-  name: $selector_name
+selector: $selector_name
 createExternalLoadBalancer: $ext_balancer

@@ -23,6 +23,8 @@ Properties:
     Usage: Out
   service:
     Contract: $.class('io.murano.apps.docker.Kubernetes.Service').notNull()
+  master:
+    Contract: $.class('io.murano.apps.docker.Kubernetes.RedisMaster')
 
 Workflow:
   initialize:
@@ -36,23 +38,21 @@ Workflow:
         Then:
           - $.environment.reporter.report($this, 'Checking for Docker Service availability')
           - $.docker.deploy()
-          - $.environment.reporter.report($this, 'Installing Application')
+          - $.environment.reporter.report($this, 'Waiting for Redis Master')
+          - $.master.deploy()
+          - $.environment.reporter.report($this, 'Installing Redis Slave Application')
           - $ports:
             - $.port
           - $env:
             - format('APPLICATION={0}', $.name)
           - $volumes: {}
-          - $labels:
-              service: 'redis'
-              role: 'slave'
           - $.bindings: $.docker.addApplication(
               docker_image => $.image,
               docker_env => $env,
               app_ports => $ports,
-              app_volume => $volumes,
-              app_labels => $labels
+              app_volume => $volumes
               )
           - $.environment.reporter.report($this, 'Configuring Kubernetes Service for Redis Master')
           - $.service.deploy()
-          - $.environment.reporter.report($this, 'Redis Master is ready')
+          - $.environment.reporter.report($this, 'Redis Slaves are ready')
           - $.setAttr(deployed, true)

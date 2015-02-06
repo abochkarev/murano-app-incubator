@@ -7,5 +7,4 @@ desiredState:
     id: $id
     containers:
 
-labels:
-  name: $name
+labels: $labels

@@ -42,15 +42,12 @@ Workflow:
           - $env:
             - format('APPLICATION={0}', $.name)
           - $volumes: {}
-          - $labels:
-              service: 'redis'
-              role: 'master'
+
           - $.bindings: $.docker.addApplication(
               docker_image => $.image,
               docker_env => $env,
               app_ports => $ports,
-              app_volume => $volumes,
-              app_labels => $labels
+              app_volume => $volumes
               )
           - $.environment.reporter.report($this, 'Configuring Kubernetes Service for Redis Master')
           - $.service.deploy()

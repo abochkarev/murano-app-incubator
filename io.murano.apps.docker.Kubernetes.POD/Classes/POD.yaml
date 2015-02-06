@@ -22,8 +22,9 @@ Properties:
 
   name:
     Contract: $.string().notNull()
+
   labels:
-    Contract: [$.string()]
+    Contract: {}
 
   kubernetes:
     Contract: $.class('io.murano.apps.docker.Kubernetes').notNull()
@@ -45,10 +46,16 @@ Properties:
     Usage: Out
 
   replication:
-    Contract: $.bool().notNull()
+    Contract: $.bool()
+    Default: false
 
   replicationFactor:
     Contract: $.int()
+    Default: 2
+
+  exposePort:
+    Contract: $.bool()
+    Default: false
 
 
 Workflow:
@@ -67,15 +74,14 @@ Workflow:
             Then:
                   - $.podDefinition: $resources.yaml('replication_group.yaml').bind(dict(
                      id => $.name,
-                     name => $.name,
-                     replicas => $.replicationFactor,
-                     replica_selector => $.name
+                     labels => $.labels,
+                     replicas => $.replicationFactor
                      ))
                   - $.podDefinition.desiredState.podTemplate.desiredState.manifest.containers: []
             Else:
                   - $.podDefinition: $resources.yaml('pod.yaml').bind(dict(
                                    id => $.name,
-                                   name => $.name
+                                   labels => $.labels
                                    ))
                   - $.podDefinition.desiredState.manifest.containers: []
           - $public_ip: 'none'
@@ -92,14 +98,12 @@ Workflow:
         Contract: [$.int()]
       app_volume:
         Contract: {}
-      app_labels:
-        Contract: {}
-        Default: {}
+
     Body:
        - $.environment.reporter.report($this, 'Adding a container to a POD')
        - $resources: new(sys:Resources)
        #TODO implement this
-       - $.podDefinition.labels: $.podDefinition + $app_labels
+
        - $container:
            name: $.name
            image: $docker_image
@@ -109,9 +113,19 @@ Workflow:
        - For: port
          In: $app_ports
          Do:
-           - $portDef:
-               name: str($port)
-               containerPort: $port
+
+           - If: $.exposePort
+             Then:
+               - $portDef:
+                   name: str($port)
+                   containerPort: $port
+                   hostPort: $port
+               - $.openPortInSecGroup($port)
+             Else:
+               - $portDef:
+                   name: str($port)
+                   containerPort: $port
+
            - $container.ports: $container.ports + list($portDef)
 
        - $.podDefinition.desiredState.manifest.containers: $.podDefinition.desiredState.manifest.containers + list($container)
@@ -140,9 +154,7 @@ Workflow:
            Contract: [$.int()]
          app_volume:
            Contract: {}
-         app_labels:
-           Contract: {}
-           Default: {}
+
        Body:
           - $.environment.reporter.report($this, 'Adding a container to a Replication Group')
           - $resources: new(sys:Resources)
@@ -155,10 +167,19 @@ Workflow:
           - For: port
             In: $app_ports
             Do:
-              - $portDef:
-                  name: str($port)
-                  containerPort: $port
-              - $container.ports: $container.ports + list($portDef)
+
+               - If: $.exposePort
+                 Then:
+                   - $portDef:
+                       name: str($port)
+                       containerPort: $port
+                       hostPort: $port
+                   - $.openPortInSecGroup($port)
+                 Else:
+                   - $portDef:
+                       name: str($port)
+                       containerPort: $port
+               - $container.ports: $container.ports + list($portDef)
 
           - $.podDefinition.desiredState.podTemplate.desiredState.manifest.containers: $.podDefinition.desiredState.podTemplate.desiredState.manifest.containers + list($container)
           - $.environment.reporter.report($this, 'Update POD')
@@ -187,9 +208,7 @@ Workflow:
            Contract: [$.int()]
          app_volume:
            Contract: {}
-         app_labels:
-           Contract: {}
-           Default: {}
+
        Body:
          - If: $.replication
            Then:
@@ -202,3 +221,17 @@ Workflow:
                                 docker_env => $docker_env,
                                 app_ports => $app_ports,
                                 app_volume => $app_volume)
+
+  openPortInSecGroup:
+    Arguments:
+      port:
+        Contract: $.int().notNull()
+    Body:
+         - $.environment.reporter.report($this, 'Configure security groups to open a service port')
+         - $securityGroupIngress:
+              - ToPort: $port
+                FromPort: $port
+                IpProtocol: tcp
+                External: true
+         - $.environment.securityGroupManager.addGroupIngress($securityGroupIngress)
+         - $.environment.stack.push()

@@ -24,6 +24,12 @@ Properties:
   service:
     Contract: $.class('io.murano.apps.docker.Kubernetes.Service').notNull()
 
+  redisMaster:
+    Contract: $.class('io.murano.apps.docker.Kubernetes.RedisMaster')
+
+
+  redisSlave:
+    Contract: $.class('io.murano.apps.docker.Kubernetes.RedisSlave')
 Workflow:
   initialize:
     Body:
@@ -36,23 +42,24 @@ Workflow:
         Then:
           - $.environment.reporter.report($this, 'Checking for Docker Service availability')
           - $.docker.deploy()
+          - $.environment.reporter.report($this, 'Waiting for Redis DB')
+          - $.redisMaster.deploy()
+          - $.redisSlave.deploy()
           - $.environment.reporter.report($this, 'Installing Application')
           - $ports:
             - $.port
           - $env:
             - format('APPLICATION={0}', $.name)
           - $volumes: {}
-          - $labels:
-              service: 'redis'
-              role: 'master'
+
           - $.bindings: $.docker.addApplication(
               docker_image => $.image,
               docker_env => $env,
               app_ports => $ports,
-              app_volume => $volumes,
-              app_labels => $labels
+              app_volume => $volumes
               )
-          - $.environment.reporter.report($this, 'Configuring Kubernetes Service for Redis Master')
+          - $.environment.reporter.report($this, 'Configuring Kubernetes Service for Guestbook ')
           - $.service.deploy()
-          - $.environment.reporter.report($this, 'Redis Master is ready')
+          #- $endpoint: format('GuestBook app is available at http://{0}:{1}',$.service.loadBalancer.virtualIp, $.port)
+          #- $.environment.reporter.report($this, $endpoint)
           - $.setAttr(deployed, true)

@@ -4,11 +4,11 @@ Templates:
      ?:
        type: io.murano.apps.docker.Kubernetes.Service
      name: 'redis-master'
-     kubernetesPOD: $.appConfiguration.docker
      kubernetes: $.appConfiguration.kubernetes
      port:  6579
      containerPort: 6379
      externalLB: false
+     enabled: true
      selector:
        service: 'redis'
        role: 'master'
@@ -17,7 +17,10 @@ Templates:
     ?:
       type: io.murano.apps.docker.Kubernetes.POD
     name: 'redis-master'
-    labels: {}
+    labels:
+      name: 'redis'
+      service: 'redis'
+      role: 'master'
     kubernetes: $.appConfiguration.kubernetes
     replication: false
     replicationFactor: 0

@@ -3,15 +3,12 @@ kind: "ReplicationController"
 id: $id
 desiredState:
     replicas: $replicas
-    replicaSelector:
-      name: $replica_selector
+    replicaSelector: $labels
     podTemplate:
        desiredState:
          manifest:
            version: "v1beta1"
            id: $id
            containers:
-       labels:
-         name: $name
-labels:
-  name: $name
+       labels: $labels
+labels: $labels

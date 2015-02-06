@@ -1,25 +1,28 @@
 Version: 2
+
 Templates:
   service:
      ?:
        type: io.murano.apps.docker.Kubernetes.Service
-     name: format('{0}-service',$.appConfiguration.name)
+     name: $.appConfiguration.name + '-service'
      kubernetes: $.appConfiguration.kubernetes
      port:  $.service_config.port
      containerPort: $.service_config.containerPort
      externalLB: $.service_config.externalLB
+     enabled: $.service_config.enable_service
      selector:
-       service: 'redis'
-       role: 'slave'
+       name: $.appConfiguration.name
 Application:
   ?:
     type: io.murano.apps.docker.Kubernetes.POD
   name: $.appConfiguration.name
-  labels: $.appConfiguration.labels
+  labels:
+    name: $.appConfiguration.name
   kubernetes: $.appConfiguration.kubernetes
   replication: $.appConfiguration.replicate
   replicationFactor: $.appConfiguration.replication_factor
   service: $service
+  exposePort: $.appConfiguration.expose
 
 
 Forms:
@@ -30,56 +33,73 @@ Forms:
           label: Application Name
           required: true
           description: >-
-            This name is used as Kubernetes ID and name label
+            This name will be used as Kubernetes ID and name label for the POD
         - name: labels
           type: string
           label: Labels
           required: false
           description: >-
-            Comma separated list of labels
+            Comma separated list of labels in JSON form {'key':'value',}
         - name: kubernetes
           type: io.murano.apps.docker.Kubernetes
           label: Kubernetes cluster
           required: true
           description: >-
-            Kubernetes service
+            Kubernetes cluster s required for POD deployement.
+        - name: expose
+          type: boolean
+          label: Expose port on a host
+          initial: false
+          description: >-
+            By default POD container's ports are not exposed to the host. In order to allow an external access
+              to the container ports this option should be enabled.
+          required: false
+          widgetMedia:
+             css: {all: ['muranodashboard/css/checkbox.css']}
         - name: replicate
           type: boolean
           label: Replicate
           initial: false
           required: false
+          description: >-
+            If enabled, a new ReplicationController will be created instead of a single POD.
           widgetMedia:
              css: {all: ['muranodashboard/css/checkbox.css']}
         - name: replication_factor
           type: integer
           label: Replication Factor
           initial: 2
+          description: >-
+            Define a number of POD clones that will be created by Kubernetes.
           required: false
   - service_config:
       fields:
         - name: enable_service
           type: boolean
           label: Enable Service for the POD
-          required: true
+          required: false
           description: >-
-            Register this POD as a Kubernetes service
+            Kubernetes PODs could be announced as a service for Kubernetes applications. If this option is enabled a
+            new Kubernetes service entry will be created. Kubernetes will allocate a service IP address and this service
+            will be accessible from any POD via this IP.
         - name: port
           type: integer
           label: Service Port
-          required: true
+          required: false
           description: >-
-            Port for a service
+            TCP\UDP Port which should be announced by a service.
         - name: containerPort
           type: integer
           label: Container Port
-          required: true
+          required: false
           description: >-
-            Port exposed by a container
+            POD's container port which should be bound to a service.
         - name: externalLB
           type: boolean
           label: Enable External LB
           initial: false
           required: false
+          description:
+            Enable external LoadBalancing for a service. New LoadBalancing pool will be created by Neutron.
           widgetMedia:
              css: {all: ['muranodashboard/css/checkbox.css']}
-

@@ -4,6 +4,7 @@ Namespaces:
   std: io.murano
   res: io.murano.resources
   sys: io.murano.system
+  traffic: io.murano.traffic
 
 # TODO: 1. we need to check status of POD by using /opt/bin/kubectl get -o json pod
 # It will provide a json with pod state, and host which we need to expose to end user.
@@ -29,13 +30,16 @@ Properties:
     Contract: $.class('io.murano.apps.docker.Kubernetes').notNull()
 
   port:
-    Contract: $.int().notNull()
+    Contract: $.int()
+    Default: 80
 
   containerPort:
-    Contract: $.int().notNull()
+    Contract: $.int()
+    Default: 80
 
   externalLB:
-    Contract: $.bool().notNull()
+    Contract: $.bool()
+    Default: false
 
   selector:
     Contract: {}
@@ -49,6 +53,15 @@ Properties:
     Usage: Out
     Default: true
 
+  loadBalancer:
+    Contract: $.class(traffic:LoadBalancer)
+
+  enabled:
+    Contract: $.bool()
+    Default: false
+
+
+
 
 Workflow:
   initialize:
@@ -59,25 +72,31 @@ Workflow:
     Body:
       - If: not $.getAttr(deployed, false)
         Then:
-          - $.environment.reporter.report($this, 'Waiting for a POD availability')
-          - $resources: new(sys:Resources)
-          - $.serviceDefinition: $resources.yaml('service.yaml').bind(dict(
-             id => $.name,
-             port => $.port,
-             container_port => $.containerPort,
-             selector_name => $.kubernetesPOD.name,
-             ext_balancer => $.externalLB
-             ))
-          - $.serviceDefinition.selector: $.serviceDefinition.selector + $.selector
-          - $template: $resources.yaml('UpdatePOD.template').bind(dict(
-                     podDefinition => $.serviceDefinition,
-                     newPOD => $.newPOD,
-                     debug => true
-                     ))
-          - $.kubernetes.kubeMaster.agent.call($template, $resources)
-          - $.environment.reporter.report($this, 'Kubernetes Service has been configured')
+          - If: $.enabled
+            Then:
+              - $.environment.reporter.report($this, 'Waiting for a POD availability')
+              - $resources: new(sys:Resources)
+              - $.serviceDefinition: $resources.yaml('service.yaml').bind(dict(
+                 id => $.name,
+                 port => $.port,
+                 container_port => $.containerPort,
+                 selector_name => $.selector,
+                 ext_balancer => $.externalLB
+                 ))
+
+              - $template: $resources.yaml('UpdatePOD.template').bind(dict(
+                         podDefinition => $.serviceDefinition,
+                         newPOD => $.newPOD,
+                         debug => true
+                         ))
+              - $.kubernetes.kubeMaster.agent.call($template, $resources)
+              - $.environment.reporter.report($this, 'Kubernetes Service has been configured')
+              - If: $.loadBalancer != null
+                Then:
+                  - $.environment.reporter.report($this, 'Configuring LoadBalancer for the service')
+                  - $.loadBalancer.createPool()
+                  - For: instance
+                    In: $.kubernetes.instances
+                    Do:
+                      - $.loadBalancer.addMember($instance)
           - $.setAttr(deployed, true)
-
-
-
-
