@@ -2,16 +2,18 @@
 
 DEFINITION_DIR=/var/run/murano-kubernetes
 cd $DEFINITION_DIR
+rm application.tgz
+rm application.tgz.b64
 
 echo "#!/bin/bash" > setup.sh
 while read line
 do
-  name=`echo $line | cut -d' ' -f1` >> setup.sh
-  kind=`echo $line | cut -d' ' -f2` >> setup.sh
-  file=`echo $line | cut -d' ' -f3` >> setup.sh
-  echo "echo 'Creating $kind $name'"
-  echo "kubectl create -f $file"
+  name=`echo $line | cut -d' ' -f1`
+  kind=`echo $line | cut -d' ' -f2`
+  file=`echo $line | cut -d' ' -f3`
+  echo "echo 'Creating $kind $name'" >> setup.sh
+  echo "kubectl create -f $file" >> setup.sh
 done < ./elements.list
 
-zip application.zip ./
-base64 application.zip > application.zip.b64
+tar czf application.tgz ./
+base64 application.tgz > application.tgz.b64

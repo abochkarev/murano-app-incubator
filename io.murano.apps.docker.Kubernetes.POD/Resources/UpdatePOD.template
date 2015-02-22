@@ -14,7 +14,7 @@ Body: |
   with open(fileName, 'w') as f:
     json.dump(args.podDefinition, f)
       
-  return updatePOD('{0} {1} {2} {3}'.format(args.newPOD, args.podDefinition.id, args.podDefinition.kind, fileName )).stdout
+  return updatePOD('{0} {1} {2} {3}'.format(args.newPOD, args.podDefinition['id'], args.podDefinition['kind'], fileName )).stdout
 
 Scripts:
   updatePOD:
