@@ -2,7 +2,7 @@ Version: 2
 Templates:
   instance:
     ?:
-      type: io.murano.resources.Instance
+      type: io.murano.resources.LinuxMuranoInstance
     name: generateHostname($.appConfiguration.unitNamingPattern, $index)
     flavor: $.instanceConfiguration.flavor
     image: 'Ubuntu-Docker-Murano-Kubernetes'
