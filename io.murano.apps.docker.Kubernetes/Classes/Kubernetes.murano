@@ -65,7 +65,7 @@ Workflow:
           - $.environment.securityGroupManager.addGroupIngress($securityGroupIngress)
           #Deploy VMS
           - $.currentCount: $.initialCount
-          - $.instances.pselect($.deploy())
+          - $.instances.take($.currentCount).pselect($.deploy())
           - $.kubeMaster: $.instances[0]
           #Configure ETCD master
           - $resources: new(sys:Resources)
@@ -77,23 +77,11 @@ Workflow:
           - $.kubeMaster.agent.call($template, $resources)
           - $first: true
           - For: inst
-            In: $.instances
+            In: $.instances.take($.currentCount)
             Do:
               - If: not $first
                 Then:
-                  - $.environment.reporter.report($this, 'Configuring ETCD node {0}'.format($inst.name))
-                  - $template: $resources.yaml('EtcdAddMember.template').bind(dict(
-                                 name => $inst.name,
-                                 ip => $inst.ipAddresses[0]
-                                 ))
-                  - $cluster_config: $.kubeMaster.agent.call($template, $resources)
-
-                  - $template: $resources.yaml('MemberEtcdSetup.template').bind(dict(
-                                 name => $inst.name,
-                                 ip => $inst.ipAddresses[0],
-                                 cluster_config => $cluster_config
-                                 ))
-                  - $inst.agent.call($template, $resources)
+                  - $.configureETCDnode($inst)
                 Else:
                   - $first: false
 
@@ -101,11 +89,30 @@ Workflow:
           - $.configureKubeMaster()
           # Install all minions in parallel
           #TODO do proper installation on master node
-          - $.instances.pselect($this.configureKubeMinion($))
+          - $.instances.take($.currentCount).pselect($this.configureKubeMinion($))
           - $ep: format('http://{0}:8080', $.kubeMaster.floatingIpAddress)
           - $.environment.reporter.report($this, 'Kubernetes API endpoint is {0}'.format($ep))
           - $.setAttr(deployed, true)
 
+  configureETCDnode:
+    Arguments:
+      inst:
+        Contract: $.class(res:Instance).notNull()
+    Body:
+      - $resources: new(sys:Resources)
+      - $.environment.reporter.report($this, 'Configuring ETCD node {0}'.format($inst.name))
+      - $template: $resources.yaml('EtcdAddMember.template').bind(dict(
+                   name => $inst.name,
+                   ip => $inst.ipAddresses[0]
+                   ))
+      - $cluster_config: $.kubeMaster.agent.call($template, $resources)
+
+      - $template: $resources.yaml('MemberEtcdSetup.template').bind(dict(
+                   name => $inst.name,
+                   ip => $inst.ipAddresses[0],
+                   cluster_config => $cluster_config
+                   ))
+      - $inst.agent.call($template, $resources)
 
 
   configureKubeMaster:
@@ -142,6 +149,19 @@ Workflow:
   scaleUP:
     Usage: Action
     Body:
+      - $.environment.reporter.report($this, 'Scaling Kubernetes containers cluster up')
+      - If: $.currentCount < $.maxCount
+        Then:
+          - $instance: $.instances[$.currentCount]
+          - $.environment.reporter.report($this, 'Create new VM')
+          - $instance.deploy()
+          - $.environment.reporter.report($this, 'Configure ETCD on a new VM')
+          - $.configureETCDnode($instance)
+          - $.environment.reporter.report($this, 'Configure Kubernetes minion on a new VM')
+          - $.configureKubeMinion($instance)
+          - $.currentCount: $.currentCount + 1
+          - $.environment.reporter.report($this, 'Scaling Kubernetes containers cluster is done')
+
     
   exportConfig:
     Usage: Action
