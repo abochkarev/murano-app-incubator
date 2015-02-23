@@ -170,5 +170,6 @@ Workflow:
       - $resources: new(sys:Resources)
       - $template: $resources.yaml('ExportConfig.template')
       - $result: $.kubeMaster.agent.call($template, $resources)
+      - $.environment.reporter.report($this, 'Got archive from Kubernetes')
       - Return: new(std:File, base64Content=>$result.content,
                     filename => 'application.tar.gz')
