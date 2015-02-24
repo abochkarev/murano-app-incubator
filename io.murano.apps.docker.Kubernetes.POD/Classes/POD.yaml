@@ -39,7 +39,7 @@ Properties:
 
   podDefinition:
    Contract: {}
-   Usage: Out
+   Usage: InOut
 
   public_ip:
     Contract: $.string()
@@ -57,6 +57,11 @@ Properties:
     Contract: $.bool()
     Default: false
 
+  usePODDefinition:
+    Contract: $.bool()
+    Default: false
+
+
 
 Workflow:
   initialize:
@@ -67,23 +72,36 @@ Workflow:
     Body:
       - If: not $.getAttr(deployed, false)
         Then:
-          - $.environment.reporter.report($this, 'Initial POD configuration')
+          - $.environment.reporter.report($this, 'Waiting for Kubernetes containters cluster')
           - $.kubernetes.deploy()
           - $resources: new(sys:Resources)
-          - If: $.replication
+          - If: not $.usePODDefinition
             Then:
-                  - $.podDefinition: $resources.yaml('replication_group.yaml').bind(dict(
-                     id => $.name,
-                     labels => $.labels,
-                     replicas => $.replicationFactor
-                     ))
-                  - $.podDefinition.desiredState.podTemplate.desiredState.manifest.containers: []
+              - If: $.replication
+                Then:
+                      - $.environment.reporter.report($this, 'Creating a new Replication Controller')
+                      - $.podDefinition: $resources.yaml('replication_group.yaml').bind(dict(
+                         id => $.name,
+                         labels => $.labels,
+                         replicas => $.replicationFactor
+                         ))
+                      - $.podDefinition.desiredState.podTemplate.desiredState.manifest.containers: []
+                Else:
+                      - $.environment.reporter.report($this, 'Creating a new Pod')
+                      - $.podDefinition: $resources.yaml('pod.yaml').bind(dict(
+                                       id => $.name,
+                                       labels => $.labels
+                                       ))
+                      - $.podDefinition.desiredState.manifest.containers: []
             Else:
-                  - $.podDefinition: $resources.yaml('pod.yaml').bind(dict(
-                                   id => $.name,
-                                   labels => $.labels
-                                   ))
-                  - $.podDefinition.desiredState.manifest.containers: []
+               - $.environment.reporter.report($this, 'Updating Pod definition')
+               - $template: $resources.yaml('UpdatePOD.template').bind(dict(
+                          podDefinition => $.podDefinition,
+                          newPOD => $.newPOD,
+                          debug => true
+                          ))
+
+               - $.kubernetes.kubeMaster.agent.call($template, $resources)
           - $public_ip: 'none'
           - $.setAttr(deployed, true)
 
@@ -100,7 +118,7 @@ Workflow:
         Contract: {}
 
     Body:
-       - $.environment.reporter.report($this, 'Adding a container to a POD')
+       - $.environment.reporter.report($this, 'Adding a container to the Pod definition')
        - $resources: new(sys:Resources)
        #TODO implement this
 
@@ -129,7 +147,7 @@ Workflow:
            - $container.ports: $container.ports + list($portDef)
 
        - $.podDefinition.desiredState.manifest.containers: $.podDefinition.desiredState.manifest.containers + list($container)
-       - $.environment.reporter.report($this, 'Update POD')
+       - $.environment.reporter.report($this, 'Updating Pod definition')
        - $template: $resources.yaml('UpdatePOD.template').bind(dict(
            podDefinition => $.podDefinition,
            newPOD => $.newPOD,
@@ -137,7 +155,7 @@ Workflow:
            ))
 
        - $.kubernetes.kubeMaster.agent.call($template, $resources)
-       - $.environment.reporter.report($this, 'Container has been added.')
+       - $.environment.reporter.report($this, 'The new container has been added.')
        - Return: {}
 
        - If: $.newPOD
@@ -156,7 +174,7 @@ Workflow:
            Contract: {}
 
        Body:
-          - $.environment.reporter.report($this, 'Adding a container to a Replication Group')
+          - $.environment.reporter.report($this, 'Adding a container to the Replication Group')
           - $resources: new(sys:Resources)
           - $container:
               name: $.name
@@ -190,7 +208,7 @@ Workflow:
               ))
 
           - $.kubernetes.kubeMaster.agent.call($template, $resources)
-          - $.environment.reporter.report($this, 'Container has been added.')
+          - $.environment.reporter.report($this, 'The new container has been added.')
           - Return: {}
 
           - If: $.newPOD
@@ -227,7 +245,7 @@ Workflow:
       port:
         Contract: $.int().notNull()
     Body:
-         - $.environment.reporter.report($this, 'Configure security groups to open a service port')
+         - $.environment.reporter.report($this, 'Configuring security groups to open the container port')
          - $securityGroupIngress:
               - ToPort: $port
                 FromPort: $port
@@ -235,3 +253,7 @@ Workflow:
                 External: true
          - $.environment.securityGroupManager.addGroupIngress($securityGroupIngress)
          - $.environment.stack.push()
+
+  setReplicasToClusterSize:
+    Body:
+        - $.podDefinition.desiredState.replicas: $.kubernetes.currentCount

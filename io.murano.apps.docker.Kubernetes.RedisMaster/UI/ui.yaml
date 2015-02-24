@@ -48,8 +48,8 @@ Forms:
             underline are allowed
         - name: kubernetes
           type: io.murano.apps.docker.Kubernetes
-          label: Kubernetes cluster
+          label: Kubernetes containers cluster
           required: true
           description: >-
-            Kubernetes service
+            Kubernetes containers cluster entity
 

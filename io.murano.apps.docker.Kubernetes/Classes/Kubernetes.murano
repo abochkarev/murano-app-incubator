@@ -149,27 +149,27 @@ Workflow:
   scaleUP:
     Usage: Action
     Body:
-      - $.environment.reporter.report($this, 'Scaling Kubernetes containers cluster up')
+      - $.environment.reporter.report($this, 'Scaling up Kubernetes containers cluster')
       - If: $.currentCount < $.maxCount
         Then:
           - $instance: $.instances[$.currentCount]
-          - $.environment.reporter.report($this, 'Create new VM')
+          - $.environment.reporter.report($this, 'Creating a new VM')
           - $instance.deploy()
-          - $.environment.reporter.report($this, 'Configure ETCD on a new VM')
+          - $.environment.reporter.report($this, 'Configuring ETCD on the new VM')
           - $.configureETCDnode($instance)
-          - $.environment.reporter.report($this, 'Configure Kubernetes minion on a new VM')
+          - $.environment.reporter.report($this, 'Configuring Kubernetes minion on the new VM')
           - $.configureKubeMinion($instance)
           - $.currentCount: $.currentCount + 1
-          - $.environment.reporter.report($this, 'Scaling Kubernetes containers cluster is done')
+          - $.environment.reporter.report($this, 'Scaling Kubernetes containers cluster complete')
 
     
   exportConfig:
     Usage: Action
     Body:
-      - $.environment.reporter.report($this, 'Action exportConfig is called')
+      - $.environment.reporter.report($this, 'Starting exportConfig action')
       - $resources: new(sys:Resources)
       - $template: $resources.yaml('ExportConfig.template')
       - $result: $.kubeMaster.agent.call($template, $resources)
-      - $.environment.reporter.report($this, 'Got archive from Kubernetes')
+      - $.environment.reporter.report($this, 'Retreived an archive from the Kubernetes cluster')
       - Return: new(std:File, base64Content=>$result.content,
                     filename => 'application.tar.gz')

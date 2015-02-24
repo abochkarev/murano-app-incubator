@@ -3,8 +3,8 @@ Type: Application
 FullName: io.murano.apps.docker.Kubernetes.Service
 Name: Kubernetes Service
 Description: |
- Kubernes POD - A collection of containers which will be scheduled onto the same node,
- which share and an IP and port space, and which can be created/destroyed together.
+ A Kubernetes service is an abstraction which defines a logical set
+ of pods and a policy by which to access them - sometimes called a micro-service.
 Author: 'Mirantis, Inc'
 Tags: [docker, kubernetes, pod]
 Classes:

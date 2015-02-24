@@ -53,14 +53,14 @@ Forms:
             Select an instance of Redis Master
         - name: replication_factor
           type: integer
-          label: Replication Factor
+          label: Replicas
           initial: 2
           required: true
 
         - name: kubernetes
           type: io.murano.apps.docker.Kubernetes
-          label: Kubernetes cluster
+          label: Kubernetes containers cluster
           required: true
           description: >-
-            Kubernetes service
+            Kubernetes containers cluster entity
 

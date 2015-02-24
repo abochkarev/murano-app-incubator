@@ -74,7 +74,7 @@ Workflow:
         Then:
           - If: $.enabled
             Then:
-              - $.environment.reporter.report($this, 'Waiting for a POD availability')
+              - $.environment.reporter.report($this, 'Waiting for Pod availability')
               - $resources: new(sys:Resources)
               - $.serviceDefinition: $resources.yaml('service.yaml').bind(dict(
                  id => $.name,
@@ -83,14 +83,14 @@ Workflow:
                  selector_name => $.selector,
                  ext_balancer => $.externalLB
                  ))
-
+              - $.environment.reporter.report($this, 'Updating service definition')
               - $template: $resources.yaml('UpdatePOD.template').bind(dict(
                          podDefinition => $.serviceDefinition,
                          newPOD => $.newPOD,
                          debug => true
                          ))
               - $.kubernetes.kubeMaster.agent.call($template, $resources)
-              - $.environment.reporter.report($this, 'Kubernetes Service has been configured')
+              - $.environment.reporter.report($this, 'Kubernetes service entity has been added')
               - If: $.loadBalancer != null
                 Then:
                   - $.environment.reporter.report($this, 'Configuring LoadBalancer for the service')

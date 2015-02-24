@@ -33,7 +33,7 @@ Forms:
           label: Application Name
           required: true
           description: >-
-            This name will be used as Kubernetes ID and name label for the POD
+            This name will be used as an id and name label for the Pod
         - name: labels
           type: string
           label: Labels
@@ -42,16 +42,16 @@ Forms:
             Comma separated list of labels in JSON form {'key':'value',}
         - name: kubernetes
           type: io.murano.apps.docker.Kubernetes
-          label: Kubernetes cluster
+          label: Kubernetes containers cluster
           required: true
           description: >-
-            Kubernetes cluster s required for POD deployement.
+            Kubernetes containers cluster is required for a Pod deployement.
         - name: expose
           type: boolean
           label: Expose port on a host
           initial: false
           description: >-
-            By default POD container's ports are not exposed to the host. In order to allow an external access
+            By default a Pod container's ports are not exposed to the host. In order to allow external access
               to the container ports this option should be enabled.
           required: false
           widgetMedia:
@@ -62,26 +62,26 @@ Forms:
           initial: false
           required: false
           description: >-
-            If enabled, a new ReplicationController will be created instead of a single POD.
+            If enabled, a new ReplicationController will be created instead of a single Pod.
           widgetMedia:
              css: {all: ['muranodashboard/css/checkbox.css']}
         - name: replication_factor
           type: integer
-          label: Replication Factor
+          label: Replicas
           initial: 2
           description: >-
-            Define a number of POD clones that will be created by Kubernetes.
+            Defines a number of POD clones that will be created by Kubernetes replication controller.
           required: false
   - service_config:
       fields:
         - name: enable_service
           type: boolean
-          label: Enable Service for the POD
+          label: Enable Kubernetes service for the Pod
           required: false
           description: >-
-            Kubernetes PODs could be announced as a service for Kubernetes applications. If this option is enabled a
-            new Kubernetes service entry will be created. Kubernetes will allocate a service IP address and this service
-            will be accessible from any POD via this IP.
+            Kubernetes Pods can be announced as a service for Kubernetes applications. If this option is enabled a
+            new Kubernetes service entity will be created. Kubernetes will allocate a service IP address and this service
+            will be accessible from any Pod via this IP address.
         - name: port
           type: integer
           label: Service Port
@@ -93,13 +93,13 @@ Forms:
           label: Container Port
           required: false
           description: >-
-            POD's container port which should be bound to a service.
+            Pod's container port which should be bound to a service.
         - name: externalLB
           type: boolean
           label: Enable External LB
           initial: false
           required: false
           description:
-            Enable external LoadBalancing for a service. New LoadBalancing pool will be created by Neutron.
+            Enable external LoadBalancing for a service. A new LoadBalancing pool will be created by OpenStack Neutron.
           widgetMedia:
              css: {all: ['muranodashboard/css/checkbox.css']}

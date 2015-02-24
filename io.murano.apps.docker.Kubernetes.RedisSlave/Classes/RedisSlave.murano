@@ -36,11 +36,11 @@ Workflow:
       - $.environment: $.find(std:Environment).require()
       - If: not $.getAttr(deployed, false)
         Then:
-          - $.environment.reporter.report($this, 'Checking for Docker Service availability')
+          - $.environment.reporter.report($this, 'Waiting for containers service availability')
           - $.docker.deploy()
           - $.environment.reporter.report($this, 'Waiting for Redis Master')
           - $.master.deploy()
-          - $.environment.reporter.report($this, 'Installing Redis Slave Application')
+          - $.environment.reporter.report($this, 'Installing Redis Slave application')
           - $ports:
             - $.port
           - $env:
@@ -52,7 +52,7 @@ Workflow:
               app_ports => $ports,
               app_volume => $volumes
               )
-          - $.environment.reporter.report($this, 'Configuring Kubernetes Service for Redis Master')
+          - $.environment.reporter.report($this, 'Configuring Kubernetes Service for Redis Slaves')
           - $.service.deploy()
           - $.environment.reporter.report($this, 'Redis Slaves are ready')
           - $.setAttr(deployed, true)

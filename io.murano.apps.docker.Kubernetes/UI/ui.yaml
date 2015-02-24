@@ -24,30 +24,30 @@ Forms:
         - name: name
           type: string
           label: Application Name
-          initial: KubernetesCluster
+          initial: KubernetesContainersCluster
           description: >-
             Enter a desired name for the application. Just A-Z, a-z, 0-9, dash and
             underline are allowed
         - name: initialCount
           type: integer
-          label: Initial Count
+          label: Initial number of cluster VMs
           initial: 2
           required: true
           description: >-
-            Initial number of custer instances
+            Initial number of cluster instances
         - name: maxCount
           type: integer
           label: Maximum number of instances
           initial: 2
           required: true
           description: >-
-            Maximum numbers on cluster instances
+            Maximum number of cluster instances
         - name: assignFloatingIP
           type: boolean
           initial: true
           label: Assign Floating IP
           description: >-
-             Select to true to assign floating IP automatically
+             Assign floating IP automatically
           initial: false
           required: false
           widgetMedia:
@@ -66,23 +66,23 @@ Forms:
           type: string
           required: false
           hidden: true
-          description: Specify some instance parameters on which application would be created
+          description: VM instance parameters
         - name: flavor
           type: flavor
           label: Instance flavor
           description: >-
-            Select registered in Openstack flavor. Consider that application performance
+            Select a VM flavor. Consider that application performance
             depends on this parameter.
           required: false
         - name: keyPair
           type: keypair
-          label: Key Pair
+          label: Key pair
           description: >-
-            Select the Key Pair to control access to instances. You can login to
-            instances using this KeyPair after the deployment of application.
+            Select the pey pair used to access the instances. You can login to
+            instances using this key pair after the deployment is complete.
           required: false
         - name: availabilityZone
           type: azone
           label: Availability zone
-          description: Select availability zone where the application would be installed.
+          description: Select an availability zone where the application would be installed.
           required: false

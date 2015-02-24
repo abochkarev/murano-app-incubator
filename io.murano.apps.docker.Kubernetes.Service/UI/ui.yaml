@@ -19,13 +19,13 @@ Forms:
           label: Application Name
           required: true
           description: >-
-            This name is used as Kubernetes ID and name label
+            This name will be used as an id and name label
         - name: port
           type: integer
           label: Service Port
           required: true
           description: >-
-            Port for a service
+            Port exposed by a service
         - name: containerPort
           type: integer
           label: Container Port
@@ -34,16 +34,16 @@ Forms:
             Port exposed by a container
         - name: kubernetesPOD
           type: io.murano.apps.docker.Kubernetes.POD
-          label: Kubernetes POD
+          label: Kubernetes Pod
           required: false
           description: >-
-            Kubernetes POD linked to a service
+            Kubernetes Pod linked to a service
         - name: kubernetes
           type: io.murano.apps.docker.Kubernetes
-          label: Kubernetes POD
+          label: Kubernetes containers cluster
           required: true
           description: >-
-            Kubernetes POD linked to a service
+            Kubernetes containers cluster entity
         - name: externalLB
           type: boolean
           label: Enable External LB
