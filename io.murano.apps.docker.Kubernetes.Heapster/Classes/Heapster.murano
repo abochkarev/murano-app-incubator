@@ -1,0 +1,53 @@
+Namespaces:
+  =: io.murano.apps.docker.Kubernetes
+  std: io.murano
+  sys: io.murano.system
+  apps: io.murano.apps
+  tc: io.murano.apps.apache
+
+Name: Heapster
+
+Extends: std:Application
+
+Properties:
+  name:
+    Contract: $.string().notNull()
+  influxdbPod:
+    Contract: $.class('io.murano.apps.docker.Kubernetes.POD').notNull()
+  heapsterPod:
+    Contract: $.class('io.murano.apps.docker.Kubernetes.POD').notNull()
+  influxService:
+    Contract: $.class('io.murano.apps.docker.Kubernetes.Service').notNull()
+
+
+
+Workflow:
+  initialize:
+    Body:
+      - $.environment: $.find(std:Environment).require()
+
+  deploy:
+    Body:
+      - $.environment: $.find(std:Environment).require()
+      - If: not $.getAttr(deployed, false)
+        Then:
+          - $.environment.reporter.report($this, 'Deploy POD with InfluxDB and Grafana')
+          - $.influxdbPod.deploy()
+          - $.influxService.deploy()
+          - $.environment.reporter.report($this, 'Deploy POD with Heapster')
+          - $.heapsterPod.deploy()
+          #TODO Open port 4194 in SecurityGroups
+          - $securityGroupIngress:
+                          - ToPort: 80
+                            FromPort: 80
+                            IpProtocol: tcp
+                            External: true
+                          - ToPort: 8086
+                            FromPort: 8086
+                            IpProtocol: tcp
+                            External: true
+          - $.environment.reporter.report($this, 'Updating Security Groups for Heapster')
+          - $.environment.securityGroupManager.addGroupIngress($securityGroupIngress)
+          - $.environment.stack.push()
+          - $.environment.reporter.report($this, 'Heapster is ready')
+          - $.setAttr(deployed, true)

@@ -1,0 +1,9 @@
+Format: 1.0
+Type: Application
+FullName: io.murano.apps.docker.Kubernetes.Heapster
+Name: Google Heapster Monitoring Service
+Description: | 
+ This application deploys Google Heapster service in a Kubernetes environment.
+Tags: [docker, application, kubernetes, heapster]
+Classes:
+ io.murano.apps.docker.Kubernetes.Heapster: Heapster.murano
