@@ -1,0 +1,58 @@
+Namespaces:
+  =: io.murano.apps.docker.Kubernetes
+  std: io.murano
+  sys: io.murano.system
+  apps: io.murano.apps
+  tc: io.murano.apps.apache
+
+Name: cAdvisor
+
+Extends: std:Application
+
+Properties:
+  name:
+    Contract: $.string().notNull()
+  pod:
+    Contract: $.class('io.murano.apps.docker.Kubernetes.POD').notNull()
+
+  exposeExternally:
+    Contract: $.bool()
+    Default: false
+
+Workflow:
+  initialize:
+    Body:
+      - $.environment: $.find(std:Environment).require()
+
+  deploy:
+    Body:
+      - $.environment: $.find(std:Environment).require()
+      - If: not $.getAttr(deployed, false)
+        Then:
+          - $.environment.reporter.report($this, 'Deploying Pod with cAdvisor')
+          - $.pod.kubernetes.deploy()
+          - $.scaleToCluster()
+          - $.pod.deploy()
+          #TODO Open port 4194 in SecurityGroups
+          - If: $.exposeExternally
+            Then:
+              - $securityGroupIngress:
+                - ToPort: 4194
+                  FromPort: 4194
+                  IpProtocol: tcp
+                  External: true
+            Else:
+              - $securityGroupIngress:
+                - ToPort: 4194
+                  FromPort: 4194
+                  IpProtocol: tcp
+                  External: false
+          - $.environment.reporter.report($this, 'Updating security groups for cAdvisor')
+          - $.environment.securityGroupManager.addGroupIngress($securityGroupIngress)
+          - $.environment.stack.push()
+          - $.environment.reporter.report($this, 'cAdvisor is ready')
+          - $.setAttr(deployed, true)
+
+  scaleToCluster:
+    Body:
+      - $.pod.setReplicasToClusterSize()

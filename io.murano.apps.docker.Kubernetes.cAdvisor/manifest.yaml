@@ -1,0 +1,9 @@
+Format: 1.0
+Type: Application
+FullName: io.murano.apps.docker.Kubernetes.cAdvisor
+Name: Google cAdvisor
+Description: | 
+ This application deploys Google cAdvisor service in a Kubernetes environment.
+Tags: [docker, application, kubernetes, cadvisor]
+Classes:
+ io.murano.apps.docker.Kubernetes.cAdvisor: cAdvisor.murano

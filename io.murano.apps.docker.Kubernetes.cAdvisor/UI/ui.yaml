@@ -1,0 +1,85 @@
+Version: 2
+Templates:
+  pod:
+    ?:
+      type: io.murano.apps.docker.Kubernetes.POD
+    name: 'cAdvisor'
+    labels: {}
+    kubernetes: $.appConfiguration.kubernetes
+    replication: false
+    replicationFactor: 0
+    usePODDefinition: true
+    podDefinition:
+        apiVersion: v1beta2
+        kind: 'ReplicationController'
+        id: 'cadvisor-agent'
+        desiredState:
+          replicas: 2
+          replicaSelector:
+            name: 'cadvisor'
+            type: 'monitoring'
+            requiredby: 'murano'
+          podTemplate:
+            labels:
+              name: 'cadvisor'
+              type: 'monitoring'
+              requiredby: 'murano'
+            desiredState:
+              manifest:
+                version: v1beta1
+                id: 'cadvisor-agent'
+                containers:
+                  - name: cadvisor
+                    image: 'google/cadvisor:0.8.0'
+                    ports:
+                      - name: http
+                        containerPort: 8080
+                        hostPort: 4194
+                    volumeMounts:
+                      - name: varrun
+                        mountPath: '/var/run'
+                        readOnly: false
+                      - name: varlibdocker
+                        mountPath: '/var/lib/docker'
+                        readOnly: true
+                      - name: sysfs
+                        mountPath: '/sys'
+                        readOnly: true
+                volumes:
+                  - name: varrun
+                    source:
+                      hostDir:
+                        path: '/var/run'
+                  - name: varlibdocker
+                    source:
+                      hostDir:
+                        path: '/var/lib/docker'
+                  - name: sysfs
+                    source:
+                      hostDir:
+                        path: '/sys'
+
+Application:
+  ?:
+    type: io.murano.apps.docker.Kubernetes.cAdvisor
+  name: 'cAdvisor'
+  pod: $pod
+  exposeExternally: true
+
+
+Forms:
+  - appConfiguration:
+      fields:
+        - name: name
+          type: string
+          label: Application Name
+          initial: 'cAdvisor'
+          description: >-
+            Enter a desired name for the application. Just A-Z, a-z, 0-9, dash and
+            underline are allowed
+        - name: kubernetes
+          type: io.murano.apps.docker.Kubernetes
+          label: Kubernetes containers cluster
+          required: true
+          description: >-
+            Kubernetes containers cluster entity
