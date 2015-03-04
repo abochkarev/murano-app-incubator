@@ -60,7 +60,7 @@ Forms:
           initial: 2
           required: true
           description: >-
-            GuestBook appication deploys frontend serice which might consist of several PODs (FrontEnd servers)
+            GuestBook appication deploys frontend serice which might consist of several Pods (FrontEnd servers)
         - name: kubernetes
           type: io.murano.apps.docker.Kubernetes
           label: Kubernetes cluster
@@ -74,7 +74,7 @@ Forms:
           type: io.murano.apps.docker.Kubernetes.RedisMaster
           label: Redis Master Service
           description: >-
-            GuestBook application uses Redis backend service. Redis backend is a master-slave configuration.
+            GuestBook application uses Redis backend service. Redis backend has master-slave configuration.
             Please select Redis Master component which will be used by the application for Read\Write operations.
         - name: slave
           type: io.murano.apps.docker.Kubernetes.RedisSlave

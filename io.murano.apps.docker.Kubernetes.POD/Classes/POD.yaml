@@ -200,7 +200,7 @@ Workflow:
                - $container.ports: $container.ports + list($portDef)
 
           - $.podDefinition.desiredState.podTemplate.desiredState.manifest.containers: $.podDefinition.desiredState.podTemplate.desiredState.manifest.containers + list($container)
-          - $.environment.reporter.report($this, 'Update POD')
+          - $.environment.reporter.report($this, 'Updating Pod definition')
           - $template: $resources.yaml('UpdatePOD.template').bind(dict(
               podDefinition => $.podDefinition,
               newPOD => $.newPOD,

@@ -6,6 +6,7 @@ Templates:
     name: generateHostname($.appConfiguration.unitNamingPattern, $index)
     flavor: $.instanceConfiguration.flavor
     image: 'Ubuntu-Docker-Murano-Kubernetes'
+    #image: 'Ubuntu-Murano-Docker-Kubernetes-v2'
     assignFloatingIp: $.appConfiguration.assignFloatingIP
     keyname: $.instanceConfiguration.keyPair
 

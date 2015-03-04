@@ -40,12 +40,12 @@ Workflow:
       - $.environment: $.find(std:Environment).require()
       - If: not $.getAttr(deployed, false)
         Then:
-          - $.environment.reporter.report($this, 'Checking for Docker Service availability')
+          - $.environment.reporter.report($this, 'Waiting for Containers service availability')
           - $.docker.deploy()
           - $.environment.reporter.report($this, 'Waiting for Redis DB')
           - $.redisMaster.deploy()
           - $.redisSlave.deploy()
-          - $.environment.reporter.report($this, 'Installing Application')
+          - $.environment.reporter.report($this, 'Installing the application')
           - $ports:
             - $.port
           - $env:
@@ -58,8 +58,9 @@ Workflow:
               app_ports => $ports,
               app_volume => $volumes
               )
-          - $.environment.reporter.report($this, 'Configuring Kubernetes Service for Guestbook ')
+          - $.environment.reporter.report($this, 'Configuring Kubernetes service entrity for Guestbook ')
           - $.service.deploy()
+          - $.environment.reporter.report($this, 'Guestbook application is ready')
           #- $endpoint: format('GuestBook app is available at http://{0}:{1}',$.service.loadBalancer.virtualIp, $.port)
           #- $.environment.reporter.report($this, $endpoint)
           - $.setAttr(deployed, true)

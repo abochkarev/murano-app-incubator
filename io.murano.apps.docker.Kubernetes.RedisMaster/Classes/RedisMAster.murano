@@ -34,9 +34,9 @@ Workflow:
       - $.environment: $.find(std:Environment).require()
       - If: not $.getAttr(deployed, false)
         Then:
-          - $.environment.reporter.report($this, 'Checking for Docker Service availability')
+          - $.environment.reporter.report($this, 'Waiting for containers service availability')
           - $.docker.deploy()
-          - $.environment.reporter.report($this, 'Installing Application')
+          - $.environment.reporter.report($this, 'Installing the application onto a containers service')
           - $ports:
             - $.port
           - $env:
