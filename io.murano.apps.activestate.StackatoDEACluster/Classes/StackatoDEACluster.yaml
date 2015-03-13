@@ -1,0 +1,50 @@
+Namespaces:
+  =: io.murano.apps.activestate
+  std: io.murano
+  res: io.murano.resources
+  sys: io.murano.system
+  apps: io.murano.apps
+
+
+Name: StackatoDEACluster
+
+Extends: std:Application
+
+Properties:
+  name:
+    Contract: $.string().notNull()
+
+  node:
+    Contract: $.class('io.murano.apps.activestate.StackatoNodeCluster').notNull()
+
+  core:
+    Contract: $.class('io.murano.apps.activestate.StackatoCore').notNull()
+
+  host:
+    Contract: $.string()
+    Usage: Out
+
+
+Workflow:
+  initialize:
+    Body:
+      - $.environment: $.find(std:Environment).require()
+
+  deploy:
+    Body:
+      - If: not $.getAttr(deployed, false)
+        Then:
+          - $.environment.reporter.report($this, 'Creating a VM ')
+          - $.node.deploy()
+          - $.core.deploy()
+
+          - $.node.setupNodes(
+              role => 'dea',
+              core_ip => $.core.host,
+              apiURL => $.core.apiURL
+              )
+
+          - $.environment.reporter.report($this, 'DEA node is created')
+
+
+          - $.setAttr(deployed, true)
