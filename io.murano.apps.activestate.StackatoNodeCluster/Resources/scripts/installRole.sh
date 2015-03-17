@@ -6,5 +6,7 @@ chmod u+w /etc/sudoers
 echo "stackato        ALL=(ALL)       NOPASSWD: ALL" >> /etc/sudoers
 chmod u-w /etc/sudoers
 
+API_NAME=api.$3
+echo "$2 $API_NAME" >> /etc/hosts
 echo "$2 $3" >> /etc/hosts
 /home/stackato/bin/kato node attach -e $1 $2
