@@ -7,4 +7,4 @@ Description: |
 Author: 'Mirantis, Inc'
 Tags: [test]
 Classes:
- io.murano.apps.activestate.StackatoNodeCluster: StackatoNodeCluster.yaml
+ io.murano.apps.activestate.StackatoNodeCluster: StackatoNodeCluster.murano

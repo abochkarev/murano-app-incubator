@@ -37,14 +37,19 @@ Workflow:
           - $.environment.reporter.report($this, 'Creating a VM ')
           - $.node.deploy()
           - $.core.deploy()
-
           - $.node.setupNodes(
               role => 'dea',
               core_ip => $.core.host,
               apiURL => $.core.apiURL
               )
-
-          - $.environment.reporter.report($this, 'DEA node is created')
-
+          - $.environment.reporter.report($this, 'DEA cluster is created')
 
           - $.setAttr(deployed, true)
+
+  scaleUp:
+    Usage: Action
+    Body:
+      - $.node.scaleUp(
+        role => 'dea',
+        core_ip => $.core.host
+      )

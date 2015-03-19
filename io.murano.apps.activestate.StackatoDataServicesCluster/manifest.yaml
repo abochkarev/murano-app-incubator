@@ -1,10 +1,10 @@
 Format: 1.0
 Type: Application
-FullName: io.murano.apps.activestate.StackatoDEACluster
+FullName: io.murano.apps.activestate.StackatoDataServicesCluster
 Name: Stackato DEA Cluster
 Description: |
  This is a simple test app with a single VM.
 Author: 'Mirantis, Inc'
 Tags: [test]
 Classes:
- io.murano.apps.activestate.StackatoDEACluster: StackatoDEACluster.murano
+ io.murano.apps.activestate.StackatoDataServicesCluster: StackatoDataServicesCluster.murano

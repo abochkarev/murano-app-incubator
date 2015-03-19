@@ -85,9 +85,32 @@ Workflow:
       apiURL:
         Contract: $.string().notNull()
     Body:
-      $.instances.take($.currentCount).pselect($this.setupNode(
-        role => $role,
-        core_ip => $core_ip,
-        apiURL => $apiURL,
-        instance => $
-        ))
+      - $.instances.take($.currentCount).pselect($this.setupNode(
+         role => $role,
+         core_ip => $core_ip,
+         apiURL => $apiURL,
+         instance => $
+         ))
+
+  scaleUp:
+    Arguments:
+      role:
+        Contract: $.string().notNull()
+      core_ip:
+              Contract: $.string().notNull()
+    Body:
+     - If: $.currentCount < $.maxCount
+       Then:
+           - $inst: $.instances[$.currentCount]
+           - $.currentCount: $.currentCount + 1
+           - $.environment.reporter.report($this, 'Adding a new VM node')
+           - $inst.deploy()
+           - $.setupNode(
+              role => $role,
+              core_ip => $core_ip,
+              apiUrl => 'none',
+              instance => $inst
+              )
+           - $.environment.reporter.report($this, 'The node with role {0} is created'.format($role))
+
+

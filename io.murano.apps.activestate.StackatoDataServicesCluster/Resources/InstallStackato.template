@@ -1,0 +1,20 @@
+FormatVersion: 2.0.0
+Version: 1.0.0
+Name: Restart VM
+
+Parameters:
+  core_ip: core_ip
+
+
+Body: |
+  return setup(args.core_ip).stdout
+
+Scripts:
+  setup:
+    Type: Application
+    Version: 1.0.0
+    EntryPoint: setup.sh
+    Files: []
+    Options:
+      captureStdout: true
+      captureStderr: true
