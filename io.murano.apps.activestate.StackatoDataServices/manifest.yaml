@@ -3,8 +3,8 @@ Type: Application
 FullName: io.murano.apps.activestate.StackatoDataServices
 Name:  StackatoDataServices
 Description: |
- This is a simple test app with a single VM.
+ This is a Data Services node application for ActiveState Stackato.
 Author: 'Mirantis, Inc'
-Tags: [test]
+Tags: [stackato]
 Classes:
  io.murano.apps.activestate.StackatoDataServices: StackatoDataServices.yaml

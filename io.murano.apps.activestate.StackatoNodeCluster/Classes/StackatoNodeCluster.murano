@@ -97,7 +97,7 @@ Workflow:
       role:
         Contract: $.string().notNull()
       core_ip:
-              Contract: $.string().notNull()
+        Contract: $.string().notNull()
     Body:
      - If: $.currentCount < $.maxCount
        Then:
@@ -108,7 +108,7 @@ Workflow:
            - $.setupNode(
               role => $role,
               core_ip => $core_ip,
-              apiUrl => 'none',
+              apiURL => 'none',
               instance => $inst
               )
            - $.environment.reporter.report($this, 'The node with role {0} is created'.format($role))

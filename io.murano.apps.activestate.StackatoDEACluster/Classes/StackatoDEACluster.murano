@@ -52,4 +52,4 @@ Workflow:
       - $.node.scaleUp(
         role => 'dea',
         core_ip => $.core.host
-      )
+        )

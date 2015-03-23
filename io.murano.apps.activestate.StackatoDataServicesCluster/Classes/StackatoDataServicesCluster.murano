@@ -51,4 +51,4 @@ Workflow:
       - $.node.scaleUp(
         role => 'data-services',
         core_ip => $.core.host
-      )
+        )

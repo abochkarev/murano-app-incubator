@@ -3,8 +3,8 @@ Type: Application
 FullName: io.murano.apps.activestate.StackatoDEACluster
 Name: Stackato DEA Cluster
 Description: |
- This is a simple test app with a single VM.
+ This is a DEA cluster for ActiveState Stackato.
 Author: 'Mirantis, Inc'
-Tags: [test]
+Tags: [stackato]
 Classes:
  io.murano.apps.activestate.StackatoDEACluster: StackatoDEACluster.murano
