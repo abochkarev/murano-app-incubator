@@ -1,0 +1,21 @@
+FormatVersion: 2.0.0
+Version: 1.0.0
+Name: Install VM
+
+Parameters:
+  ip: $ip
+  hostname: $hostname
+
+
+Body: |
+  return setup('{0} {1}'.format(args.ip, args.hostname)).stdout
+
+Scripts:
+  setup:
+    Type: Application
+    Version: 1.0.0
+    EntryPoint: setupcore.sh
+    Files: []
+    Options:
+      captureStdout: true
+      captureStderr: true

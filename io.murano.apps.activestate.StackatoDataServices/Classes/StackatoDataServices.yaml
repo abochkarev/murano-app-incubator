@@ -24,6 +24,9 @@ Properties:
     Contract: $.string()
     Usage: Out
 
+  monitoring:
+    Contract: $.class('io.murano.apps.monitoring.MonitoringService')
+
 Workflow:
   initialize:
     Body:
@@ -52,5 +55,16 @@ Workflow:
           - $resources: new(sys:Resources)
 
           - $.environment.reporter.report($this, 'Data Service node is created')
+          - $.setupMonitoring()
           - $.host: $.node.instance.ipAddresses[0]
           - $.setAttr(deployed, true)
+
+  setupMonitoring:
+    Body:
+      - If: $.monitoring != null
+        Then:
+          - $.environment.reporter.report($this, 'Adding Core node to the monitoring system')
+          - $.monitoring.deploy()
+          - $.monitoring.setupCheck(instance => $.node.instance,
+                                    action_object => $this,
+                                    action_name => 'none')

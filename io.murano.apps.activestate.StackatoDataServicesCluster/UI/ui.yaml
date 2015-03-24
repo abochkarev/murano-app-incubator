@@ -3,7 +3,7 @@ Templates:
   instance:
     ?:
       type: io.murano.resources.LinuxMuranoInstance
-    name: generateHostname($.instanceConfiguration.unitNamingPattern, 1)
+    name: generateHostname($.instanceConfiguration.unitNamingPattern, $index)
     flavor: $.instanceConfiguration.flavor
     image: 'Stackato-murano'
     assignFloatingIp: $.appConfiguration.assignFloatingIP
@@ -14,6 +14,7 @@ Application:
     type: io.murano.apps.activestate.StackatoDataServicesCluster
   name: $.appConfiguration.name
   core: $.appConfiguration.core
+  monitoring: $.appConfiguration.monitoring
   node:
     ?:
       type: io.murano.apps.activestate.StackatoNodeCluster
@@ -28,7 +29,7 @@ Forms:
         - name: name
           type: string
           label: Application Name
-          initial: DEA
+          initial: DataService
           description: >-
             Enter a desired name for the application. Just A-Z, a-z, 0-9, dash and
             underline are allowed
@@ -44,6 +45,13 @@ Forms:
           type: io.murano.apps.activestate.StackatoCore
           label: Stackato Core
           required: true
+        - name: monitoring
+          type: io.murano.apps.monitoring.NagiosService
+          required: false
+          label: Monitoring System
+          description: >-
+            An external monitoring system can be used to monitor Stackato cluster nodes.
+
         - name: assignFloatingIP
           type: boolean
           label: Assign Floating IP

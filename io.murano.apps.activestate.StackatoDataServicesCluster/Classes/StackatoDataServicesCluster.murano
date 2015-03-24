@@ -24,6 +24,9 @@ Properties:
     Contract: $.string()
     Usage: Out
 
+  monitoring:
+    Contract: $.class('io.murano.apps.monitoring.MonitoringService')
+
 
 Workflow:
   initialize:
@@ -37,12 +40,24 @@ Workflow:
           - $.environment.reporter.report($this, 'Creating a VM ')
           - $.node.deploy()
           - $.core.deploy()
-          - $.node.setupNodes(
-              role => 'data-services',
-              core_ip => $.core.host,
-              apiURL => $.core.apiURL
-              )
+          - Try:
+              - $.node.setupNodes(
+                  role => 'data-services',
+                  core_ip => $.core.host,
+                  apiURL => $.core.apiURL
+                  )
+            Catch:
+              - With: 'murano.engine.system.agent.AgentException'
+                As: exc
+                Do:
+                  - $.core.restart()
+                  - $.node.setupNodes(
+                        role => 'data-services',
+                        core_ip => $.core.host,
+                        apiURL => $.core.apiURL
+                        )
           - $.environment.reporter.report($this, 'DEA cluster is created')
+          - $.setupMonitoring()
           - $.setAttr(deployed, true)
 
   scaleUp:
@@ -52,3 +67,16 @@ Workflow:
         role => 'data-services',
         core_ip => $.core.host
         )
+
+  setupMonitoring:
+    Body:
+      - If: $.monitoring != null
+        Then:
+          - $.environment.reporter.report($this, 'Adding nodes to the monitoring system')
+          - $.monitoring.deploy()
+          - For: inst
+            In: $.node.instances.take($.node.currentCount)
+            Do:
+              - $.monitoring.setupCheck(instance => $inst,
+                                        action_object => $this,
+                                        action_name => 'none')
