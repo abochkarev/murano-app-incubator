@@ -60,8 +60,8 @@ Methods:
         Contract: $.string().notNull()
     Body:
     - $.environment.reporter.report($this, '[Nagios] Add service to monitoring')
-    - $alarmAction: format('{0}/actions/{1}/actions/{2}_{3}',
-                config(murano,actions_url),
+    - $alarmAction: format('{0}/v1/environments/{1}/actions/{2}_{3}',
+                'http://23.246.241.131:9090',
                 $.environment.id(),
                 $action_object.id(),
                 $action_name
@@ -93,8 +93,8 @@ Methods:
         Default: '/'
     Body:
         - $.environment.reporter.report($this, '[Nagios] Add service to monitoring')
-        - $alarmAction: format('{0}/actions/{1}/actions/{2}_{3}',
-                    config(murano,actions_url),
+        - $alarmAction: format('{0}/v1/environments/{1}/actions/{2}_{3}',
+                    'http://23.246.241.131:9090',
                     $.environment.id(),
                     $action_object.id(),
                     $action_name

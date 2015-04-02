@@ -32,14 +32,14 @@ CRITICAL)
 
                 1)
                         #Notify murano
-                        curl -X POST --data '{}' -H "Content-type: text/plain" $MURANO_ALARM_ENDPOINT
+                        curl $MURANO_ALARM_ENDPOINT
                         ;;
                         esac
                 ;;
 
         HARD)
                 #Notify Murano
-                curl -X POST --data '{}' -H "Content-type: text/plain" $MURANO_ALARM_ENDPOINT
+                curl $MURANO_ALARM_ENDPOINT
                 ;;
         esac
         ;;
