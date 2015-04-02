@@ -53,8 +53,7 @@ Workflow:
           - If: $.tomcat.clustered
             Then:
               - $.monitoring.deploy()
-              - $.tomcat.cast('io.murano.apps.test.SimpleVMcluster').registerAlarmsForCluster(monitoring => $.monitoring,
-                          action_object => $this, action_name => 'scaleUP')
+              - $.setupClusterMonitoring()
               - $.tomcat.enableLb()
               - $ep: $.tomcat.public_ip + '/' + $.dir
             Else:
@@ -90,7 +89,15 @@ Workflow:
             ))
         - $instance.agent.call($template, $resources)
 
-  scaleUP:
+setupClusterMonitorig:
+  Body:
+    - $.tomcat.instances.take($.tomcat.currentCount).select(
+        $.monitoring.setupProbe(type => 'HTTP', instance => $,
+                                action_object => $this, action_name => 'healCluster',
+                                port => 8080, url => '/' + $this.dir)
+      )
+
+  healCluster:
     Usage: Action
     Body:
      - If: $.tomcat.clustered

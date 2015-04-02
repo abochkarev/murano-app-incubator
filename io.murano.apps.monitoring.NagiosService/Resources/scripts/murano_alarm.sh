@@ -32,14 +32,14 @@ CRITICAL)
 
                 1)
                         #Notify murano
-                        curl $MURANO_ALARM_ENDPOINT
+                        curl -X POST --data "{'host': '$4'}" -H "Content-type: application/json" $MURANO_ALARM_ENDPOINT
                         ;;
                         esac
                 ;;
 
         HARD)
                 #Notify Murano
-                curl $MURANO_ALARM_ENDPOINT
+                curl -X POST --data "{'host': '$4'}" -H "Content-type: application/json" $MURANO_ALARM_ENDPOINT
                 ;;
         esac
         ;;
