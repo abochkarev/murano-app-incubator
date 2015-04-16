@@ -8,8 +8,11 @@
 # A list of the env variables is available here:
 #   http://nagios.sourceforge.net/docs/3_0/macrolist.html
 
-source /etc/nagios/murano.sh
-
+if [ "$5" != "" ]; then
+  source /etc/nagios/murano_$5.sh
+else
+  source /etc/nagios/murano.sh
+fi
 #MURANO_ALARM_ENDPOINT="http://muranoip:port/alarmURL"
 
 case "$1" in
@@ -32,14 +35,14 @@ CRITICAL)
 
                 1)
                         #Notify murano
-                        curl -X POST --data "{'host': '$4'}" -H "Content-type: application/json" $MURANO_ALARM_ENDPOINT
+                        curl -X POST --data "{\"host\": \"$4\"}" -H "Content-type: application/json" $MURANO_ALARM_ENDPOINT
                         ;;
                         esac
                 ;;
 
         HARD)
                 #Notify Murano
-                curl -X POST --data "{'host': '$4'}" -H "Content-type: application/json" $MURANO_ALARM_ENDPOINT
+                curl -X POST --data "{\"host\"': \"$4\"}" -H "Content-type: application/json" $MURANO_ALARM_ENDPOINT
                 ;;
         esac
         ;;

@@ -22,7 +22,7 @@ fi
 
 bash installer.sh -p sys -i "httpd php php-cli gcc glibc glibc-common gd gd-devel net-snmp"
 
-bash installer.sh -p sys -i "nagios.x86_64 nagios-plugins-all.x86_64"
+bash installer.sh -p sys -i "nagios.x86_64 nagios-plugins-all.x86_64 nagios-plugins-nrpe.x86_64"
 service httpd start
 
 

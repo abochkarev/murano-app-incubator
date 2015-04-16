@@ -1,10 +1,13 @@
 #!/bin/bash
 
-echo "Params: $1 $2 $3 $4 $5 "
+# $6 - action name
+
+echo "Params: $1 $2 $3 $4 $5 $6"
 sed -i.bak "s/%IP%/$1/g" service-http.cfg
 sed -i.bak "s/%HOST%/$2/g" service-http.cfg
 sed -i.bak "s/%PORT%/$4/g" service-http.cfg
 sed -i.bak "s/%URL%/\\$5/g" service-http.cfg
+sed -i.bak "s/%ACTION%/\\$6/g" service-http.cfg
 
 sed -i.bak "s/%IP%/$1/g" host-entry.cfg
 sed -i.bak "s/%HOST%/$2/g" host-entry.cfg

@@ -65,8 +65,12 @@ Workflow:
           - $.environment.reporter.report($this, '[VMCluster]VMs are created')
           #Find where is our network and put LB in this net
           - $net: $.environment.defaultNetworks.environment
-          - $subnetRef: $net.name + '-subnet-' + $net.id()
-          - $extNetId: $net.getExternalNetId()
+          - If: $net != null
+            Then:
+               - $.environment.reporter.report($this, '[VMCluster]Using existing external network')
+          - $netRef: $net.cast('io.murano.resources.NeutronNetwork')._getNetworkName()
+          - $subnetRef: $net.cast('io.murano.resources.NeutronNetwork')._getSubnetName()
+          - $extNetId: $net.cast('io.murano.resources.NeutronNetwork')._getExternalNetId()
 
           - $.environment.reporter.report($this, '[VMCluster]Creating LB Pool')
           - $template: $resources.yaml('lb-template.hot').bind(dict(
@@ -87,6 +91,9 @@ Workflow:
          Contract: $.string().notNull()
       port:
          Contract: $.int().notNull()
+      adminState:
+        Contract: $.bool()
+        Default: true
 
     Body:
       - $resources: new(sys:Resources)
@@ -95,7 +102,8 @@ Workflow:
            member => 'lb-mem'.join($instance_name),
            pool_name => 'testPool',
            instance => $instance_name,
-           member_port => $port
+           member_port => $port,
+           admin_state => $adminState
           ))
       - $.environment.stack.updateTemplate($template)
       - $.environment.stack.push()
@@ -114,10 +122,10 @@ Workflow:
         In: $.instances.take($.initial_count)
         Do:
           - $monitoring.setupCheck(instance => $inst,
-            action_object => $action_object, action_name => $action_name)
+              action_object => $action_object, action_name => $action_name)
 
 
   scaleUP:
     Usage: Action
     Body:
-     - $.addVM()
+      - $.addVM()

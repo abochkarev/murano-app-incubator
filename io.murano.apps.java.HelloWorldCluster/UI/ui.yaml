@@ -74,3 +74,14 @@ Forms:
           descriptionTitle: Password
           description: >-
             Please, provide password that is going to be used to connect to the database
+  - autoscaling:
+      fields:
+        - name: cpulimit
+          type: string
+          required: false
+          label: CPU load threshold
+          initial: '1.7'
+          description: >-
+            This field specifies the value of a CPU load threshold. Each CPU core adds 1.0 for 100% of use.
+            For example, 2.5 means that 2 cores are used at 100% and another cpu core is used by 50%.
+

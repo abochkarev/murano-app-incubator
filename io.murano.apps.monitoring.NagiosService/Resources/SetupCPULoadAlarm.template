@@ -1,0 +1,25 @@
+FormatVersion: 2.0.0
+Version: 1.0.0
+Name: Setup Service
+
+Parameters:
+  ip: $ip
+  host: $host
+  warningLevels: $warningLevels
+  criticalLevels: $criticalLevels
+  action_name: $action_name
+Body: |
+  return setup('{0} {1} {2} {3} {4}'.format(args.ip, args.host, args.warningLevels, args.criticalLevels, args.action_name)).stdout
+
+Scripts:
+  setup:
+    Type: Application
+    Version: 1.0.0
+    EntryPoint: installServiceCPULoad.sh
+    Files:
+      - <installer.sh>
+      - <common.sh>
+      - <service-cpu-load.cfg>
+    Options:
+      captureStdout: true
+      captureStderr: false

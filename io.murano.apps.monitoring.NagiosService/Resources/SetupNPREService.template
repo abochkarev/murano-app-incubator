@@ -1,0 +1,22 @@
+FormatVersion: 2.0.0
+Version: 1.0.0
+Name: Setup Service
+
+Parameters:
+  server_ip: $server_ip
+
+Body: |
+  return setup('{0} '.format(args.server_ip)).stdout
+
+Scripts:
+  setup:
+    Type: Application
+    Version: 1.0.0
+    EntryPoint: installNPREService.sh
+    Files:
+      - <installer.sh>
+      - <common.sh>
+      - <nrpe.cfg>
+    Options:
+      captureStdout: true
+      captureStderr: false

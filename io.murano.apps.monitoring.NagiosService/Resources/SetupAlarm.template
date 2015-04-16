@@ -1,0 +1,25 @@
+FormatVersion: 2.0.0
+Version: 1.0.0
+Name: Setup Service
+
+Parameters:
+  action_name: $action_name
+  alarm_action: $alarm_action
+
+
+Body: |
+  return setup('{0} {1}'.format(args.action_name, args.alarm_action)).stdout
+
+Scripts:
+  setup:
+    Type: Application
+    Version: 1.0.0
+    EntryPoint: installAlarmAction.sh
+    Files:
+      - <installer.sh>
+      - <common.sh>
+      - <commands_alarm.cfg>
+
+    Options:
+      captureStdout: true
+      captureStderr: false

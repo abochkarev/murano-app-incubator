@@ -86,7 +86,7 @@ Workflow:
     Body:
         - $this.find(std:Environment).reporter.report($this, '[TomcatCluster] Go online.')
         - $.instances.take($this.current_count).pselect($this.addToLB(instance_name => $.name,
-            port => $this.port))
+            port => $this.port, adminState => true))
 
 
   addInstance:
@@ -108,6 +108,16 @@ Workflow:
       #Deploy app to last VM
       - $app.deployApp($inst)
       - $.environment.reporter.report($this, '[TomcatCluster]Adding new VM to LB')
-      - $.addToLB(instance_name => $inst.name, port => $.port)
+      - $.addToLB(instance_name => $inst.name, port => $.port, adminState => true)
       - Return: $inst
+
+  restartService:
+    Arguments:
+      instance:
+        Contract: $.class(res:Instance).notNull()
+    Body:
+      - $resources: new(sys:Resources)
+      - $template: $resources.yaml('RestartTomcat.template')
+      - $this.find(std:Environment).reporter.report($this, 'Restarting Tomcat Service')
+      - $instance.agent.call($template, $resources)
 

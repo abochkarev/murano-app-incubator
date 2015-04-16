@@ -55,6 +55,9 @@ Workflow:
               - $.monitoring.deploy()
               - $.setupClusterMonitoring()
               - $.tomcat.enableLb()
+              #- $.monitoring.setupProbeForIP(type => 'HTTP', ip => $.tomcat.public_ip, hostname => 'lb_application_endpoint',
+              #                                   action_object => $this, action_name => 'endpointFailureAction',
+              #                                   port => 80, url => '/' + $.dir)
               - $ep: $.tomcat.public_ip + '/' + $.dir
             Else:
              - $.monitoring.deploy()
@@ -79,7 +82,7 @@ Workflow:
               dir => $.dir
             ))
         - $instance.agent.call($template, $resources)
-        - $this.find(std:Environment).reporter.report($this, '[HelloWorld]Configure access to PostgreSql.')
+        - $.environment.reporter.report($this, '[HelloWorld]Configure access to PostgreSql.')
         - $template: $resources.yaml('ConfigureAccessToPostgreSql.template').bind(dict(
              database => $.dbName,
              username => $.dbUser,
@@ -89,26 +92,71 @@ Workflow:
             ))
         - $instance.agent.call($template, $resources)
 
-setupClusterMonitorig:
-  Body:
-    - $.tomcat.instances.take($.tomcat.currentCount).select(
-        $.monitoring.setupProbe(type => 'HTTP', instance => $,
-                                action_object => $this, action_name => 'healCluster',
-                                port => 8080, url => '/' + $this.dir)
-      )
+  setupClusterMonitoring:
+    Body:
+      - $.tomcat.instances.take($.tomcat.current_count).select($this.monitoring.setupProbe(type => 'HTTP',
+                                                              instance => $, action_object => $this,
+                                                              action_name => 'healCluster',
+                                                              port => 8080, url => '/' + $this.dir))
+      - $.tomcat.instances.take($.tomcat.current_count).select($this.monitoring.setupCPULoadCheck(instance => $,
+                                                               action_object => $this,
+                                                               action_name => 'scaleUP',
+                                                               warning_levels =>'2.1,3.0,4.0',
+                                                               critical_levels => '4.0,5.0,6.0'))
 
   healCluster:
     Usage: Action
+    Arguments:
+      host:
+        Contract: $.string()
+        Default: 'ui defined'
     Body:
-     - If: $.tomcat.clustered
-       Then:
-         - $instance: $.tomcat.addInstance($this)
-         - $.monitoring.setupCheck(instance => $instance,
-                                    action_object => $this, action_name => 'scaleUP')
+      - $.environment.reporter.report($this, 'Got heal action call for {0}'.format($host))
+      - If: $.tomcat.clustered
+        Then:
+          - $deployed_instances: $.tomcat.instances.where(len($.ipAddresses) >0)
+          - $failed_instances: $deployed_instances.where($.ipAddresses[0] = $host)
+          - If: len($failed_instances) >0
+            Then:
+              - $inst: $failed_instances[0]
+              - $.environment.reporter.report($this, 'Disable host {0} in LB'.format($inst.name))
+              - $.environment.reporter.report($this, 'Trying to restart the service')
+              - $.tomcat.restartService(instance => $inst)
+              #- $.tomcat.addToLB(instance_name => $inst.name, port => $.tomcat.port, adminState => false)
+          #- $.environment.reporter.report($this, 'Adding a new instance to backup a failed node')
+          #- $instance: $.tomcat.addInstance($this)
+          #- $.monitoring.setupProbe(type => 'HTTP', instance => $instance, action_object => $this, action_name => 'healCluster',
+          #                             port => 8080, url => '/' + $this.dir)
+
+
+  endpointFailureAction:
+    Usage: Action
+    Arguments:
+      host:
+        Contract: $.string()
+        Default: 'ui defined'
+    Body:
+      - $.environment.reporter.report($this, 'Got endpointFailureAction action for {0}'.format($host))
+      - $.environment.reporter.report($this, 'Here we should have DR logic to switchover to another deployment.')
 
   restartTomcat:
+    Arguments:
+        host:
+          Contract: $.string()
+          Default: 'ui defined'
     Usage: Action
     Body:
+      - $.environment.reporter.report($this, 'Got restart action for {0}'.format($host))
       - If: not $.tomcat.clustered
         Then:
           - $.tomcat.restartService()
+
+  scaleUP:
+    Usage: Action
+    Arguments:
+      host:
+        Contract: $.string()
+        Default: 'UI selected'
+    Body:
+      - $.environment.reporter.report($this, 'Performing scaleUP action')
+      - $instance: $.tomcat.addInstance($this)
