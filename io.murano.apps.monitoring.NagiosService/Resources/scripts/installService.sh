@@ -2,6 +2,7 @@
 
 sed -i.bak "s/%IP%/$1/g" murano-entry.cfg
 sed -i.bak "s/%HOST%/$2/g" murano-entry.cfg
+sed -i.bak "s/%ACTION%/$4/g" murano-entry.cfg
 
 sed -i.bak "s/%IP%/$1/g" host-entry.cfg
 sed -i.bak "s/%HOST%/$2/g" host-entry.cfg

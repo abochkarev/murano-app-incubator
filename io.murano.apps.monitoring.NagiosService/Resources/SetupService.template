@@ -6,9 +6,10 @@ Parameters:
   ip: $ip
   alarm_url: $alarm_url
   host_name: $host_name
+  action_name: $action_name
 
 Body: |
-  return setup('{0} {1} {2}'.format(args.ip, args.host_name, args.alarm_url)).stdout
+  return setup('{0} {1} {2} {3}'.format(args.ip, args.host_name, args.alarm_url, args.action_name)).stdout
 
 Scripts:
   setup:

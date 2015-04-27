@@ -76,7 +76,8 @@ Methods:
         - $template: $resources.yaml('SetupService.template').bind(dict(
             ip => $instance.ipAddresses[0],
             alarm_url => $alarmAction,
-            host_name => $instance.name
+            host_name => $instance.name,
+            action_name => $action_name
             ))
         - $.instance.agent.call($template, $resources)
 
